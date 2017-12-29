@@ -1,0 +1,1329 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+info:
+  version: "0.1.0"
+  title: Trust Mile Consumer Application
+
+  description: |
+    Describes the API for the Consumer App
+
+    ## correlationID
+      This parameter is returned with every request.
+
+      The intent is that the server side will generate a unique id for each request, and feature this ID in all logging that occurs.  This will allow us to very easily to resolve issues faced consumers of the API.  When questioned with 'Why didn't this work' or 'This isn't working correctly' - we can identify the request server-side and easily identify events on the server associated with that request.
+
+      My intent is to generate a log/trace of every request
+
+    ## Deliveries
+      'What is a delivery' Currently a delivery can only be tracked using the aftership api at the consignment level.
+
+
+host: 127.0.0.1:5001
+
+schemes:
+  - https
+
+basePath: /consumer/v1
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+
+securityDefinitions:
+  internalApiKey:
+    type: apiKey
+    in: header
+    name: X-consumer-apiKey
+
+
+
+paths:
+  /account/login:
+    post:
+      tags:
+        - account
+      description: |
+        ## __Service: Login__
+        Logs a user in to their account and returns the API key to be used in subsequent requests.  Returns the status of the users email verification via the 'account' object
+      parameters:
+        - name: body
+          in: body
+          description: User login credentials
+          required: true
+          schema:
+            $ref: '#/definitions/accountLogin'
+      responses:
+        '200':
+          description: the login was sucessful.  The users 'account' is returned so that the 'email verified' status can be determineed
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid
+              emailVerified:
+                type: boolean
+              userId:
+                type: string
+                format: uuid
+
+        '403':
+          description: username or password incorrect
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/register:
+    post:
+      tags:
+          - account
+      description: |
+        ## Service: Signup
+
+        Creates a new user account and logs in the user. Returns an apiKey to be used in subsequent requests.
+
+        After signup the user will be unable to proceed until their email address is verified.  The users device information is caputired at this stage.
+
+      parameters:
+        - name: body
+          in: body
+          description: Registration / signup
+          required: true
+          schema:
+            "$ref": "#/definitions/AccountRegister"
+      responses:
+        '200':
+          description: account created
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid
+        '409':
+          description: username already exists
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the username was not an email address or the password failed complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/anonymous/register:
+    post:
+      tags:
+        - account
+      description: We register the device for anonymous users.
+      parameters:
+        - name: body
+          in: body
+          description: Anonymous signup
+          required: true
+          schema:
+            "$ref": "#/definitions/AnonymousRegister"
+      responses:
+        '200':
+          description: account created
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid
+        '409':
+          description: device already exists
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '400':
+          description: invalid device information
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/forgotPassword:
+    post:
+      tags:
+          - account
+      description: |
+        ## Service: Forgot Password
+
+        Triggers an reset password email to be sent to the supplied email address.
+        ** Impelemtned **
+      parameters:
+        - name: body
+          in: body
+          description: bob
+          required: true
+          schema:
+            "$ref": "#/definitions/accountForgotPassword"
+
+      responses:
+        '200':
+          description: a reset password link was sent to the email address
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+        '404':
+          description: the email address was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/reverifyEmail:
+    put:
+      tags:
+        - account
+      description:
+        resends the email verification email.  The email address is found based on the supplied apiKey
+        ** Implemented **
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: email was sent
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '409':
+          description: the email address is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /account/verifyEmail/{verificationCode}:
+    get:
+      tags:
+        - account
+      description: Caller is proving he has received email by doing this get.
+                   ** Implemented **
+      parameters:
+        - name: verificationCode
+          in: path
+          type: string
+          required: true
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: verification succeeded
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '409':
+          description: the email address is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /account:
+    get:
+      tags:
+        - account
+      description: |
+        ## Service: Check Signup, Get Account.
+
+        Returs the users account, including if the email addres has been verified.
+
+        ** Implemented **
+
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: the status of an account
+          schema:
+            properties:
+              correlationID:
+                type: string
+              account:
+                $ref: '#/definitions/Account'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+    put:
+      tags:
+        - account
+      description: |
+        ## Service: Save Details
+
+        Sets a users name and home address.
+        ** Implemented **
+
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/AccountUpdate"
+
+      responses:
+        '200':
+          description: the details were saved
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: verification failed.  Missing field, etc
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+    delete:
+      tags:
+        - account
+      description: |
+        ## Service: Reset Signup
+
+        Allows a user to delete their account.  Currently only supported when the email address has not been verified.
+
+        The account to delete is based on the apiKey.  After this call the apiKey is invalidated.
+
+        ** Implemented **
+
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: the account was deleted
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '409':
+          description: the email address on the account is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /account/password:
+    post:
+      tags:
+        - account
+      description: |
+        ## Service: Set Login
+
+        Allows a user to change their password.
+        ** Implemented **
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordUpdate'
+      responses:
+        '200':
+          description: the password was changed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '403':
+          description: the supplied current password did not match the users current password
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the new password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /account/resetPassword/{resetToken}:
+    parameters:
+      - name: resetToken
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - account
+      description: |
+        Validates a token and returns the email address associated with this token
+        ** Implemented **
+      responses:
+        '200':
+          description: The token is valid.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailAddress:
+                type: string
+
+        '404':
+          description: the token was not found (incorrect, expired, etc)
+          schema:
+            properties:
+              correlationID:
+                type: string
+    post:
+      tags:
+          - account
+      description: Sets the users password to that supplied
+                   ** Implemented**
+                   Jorourke  Needed
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordReset'
+      responses:
+        '200':
+          description: The password was set.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailAddress:
+                type: string
+
+        '404':
+          description: the token was not found (incorrect, expired, etc)
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the new password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+
+#deliveries
+
+
+  /deliveries:
+    post:
+      tags:
+        - deliveries
+      description: |
+        ##Service: Add Delivery
+
+        Adds a delivery to the users delivery list. Requires a:
+        - trackingNumber
+        (eg. LV9006545301000600205 )
+        - courierSlug
+        (eg. australia-post)
+        - purchasedFrom
+        (eg. amazon/amazon.com)
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            "$ref": '#/definitions/AddDelivery'
+
+      responses:
+        '200':
+          description: the delivery was added
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliveryId:
+                type: string
+                format: uuid
+        '404':
+          description: the delivery was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '400':
+          description: A required field was not supplied
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+    get:
+      tags:
+        - deliveries
+      description: |
+
+        ** This is implemnted **
+        ## Service: Get Deliveries
+
+        Retrieves a list of the users deliveries.
+
+        Returns a list of *Delivery* objects that should not yet be relegated to History. Some of which are *CourierDelivery*s and others are *NeighbourDelivery*s. Included in the list are all:
+        - open *Delivery*s
+        - closed *Delivery*s with unread messages
+        - closed *Delivery*s that were closed within the last 3 days, or last had a newly read message in the past 3 days
+
+        Note that *Delivery*s in a state of "Picked Up - Leave Feedback" are returned as "Closed" to all users that are not the Owner of the *Delivery*
+
+        The sort order is:
+        - Open *NeighbourDelivery*s where I am the neighbour
+        - Open *NeighbourDelivery*s where I need to pickup
+        - Open *CourierDelivery*s
+        - Closed *NeighbourDelivery*s with unread *Message*s
+        - Closed *NeighbourDelivery*s and *CourierDelivery*s sorted by closed date
+
+        Retrieves an object describing application settings to apply to this users application installiation, this object is 'piggey backed' on this call
+
+        The *ApplicationSettings* object includes:
+        - *ShowMessages* : show/hide the messages icon (no messages until ready for neighbour collections)
+        - *OfferNeighbourSignupInMenu* : yes/no to offer neighbour signup in the SETTINGS menu
+        - *PromptForNeighbourSignup* : yes/no to show a neighbour signup prompt on My Deliveries
+              #This functionality is undefined
+        - *IsTrustMileNeighbour : yes/no that this user has given permission to receive deliveries on behalf of others
+                ## This setting controls if neighbour settings are shown in the consumer app
+                ## This setting will be true if - the neighbour is opted in OR if the neighbour is in the opting-out process
+                ## Should we rename this to 'DisplayNeighbourScreens'
+        - *HeartbeaSht* : 0 (off) or greater, being the number of minutes between sending heartbeats to the server
+        - *TrustMileFeedback* : show / hide capture of feedback for TrustMile on feedback screen
+
+
+        #Retrieves the number of unread messages for the user.
+
+        ** V1 implemented - needs adding in TrustmileDelivery option **
+      security:
+        - internalApiKey: []
+
+      # responses:
+      #   '200':
+      #     description: the status of an account
+      #     schema:
+      #       properties:
+      #         correlationID:
+      #           type: string
+
+      responses:
+        '200':
+          description: the list of deliveries, may be empty
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliveries:
+                type: array
+                items:
+                  $ref: '#/definitions/DeliveryInfo'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+    delete:
+      tags:
+        - deliveries
+      description: |
+        ##Service: Delete a delivery
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            properties:
+              deliveryID:
+                type: string
+      responses:
+        '200':
+          description: the delivery was deleted
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: the delivery was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '400':
+          description: A required field was not supplied
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /deliveries/delegateLink/{deliveryId}:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: |
+        ## A user can delegate a delivery via a deep link. This call creates that link and creates the relevant
+        record in the db.
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: Link generated and returned.
+          schema:
+            properties:
+              delegateLink:
+                type: string
+                format: url
+              correlationID:
+                type: string
+        '404':
+          description: the deliveryId was not found for this user.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '400':
+          description: This is an invalid request
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /deliveries/delegate:
+    post:
+      tags:
+        - deliveries
+      description: |
+        ## This is called once a user clicks on the share link.
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            "$ref": '#/definitions/DelegateDelivery'
+      responses:
+        '200':
+          description: Success.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: the deliveryId or the delegation item was not found for this user.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '400':
+          description: This is an invalid request
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /deliveries/trustmile/{deliveryId}:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: |
+        ##Service: Get detail for specific TrustMile delivery.
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: TrustMile delivery info
+          schema:
+            properties:
+              correlationID:
+                type: string
+              delivery:
+                $ref: '#/definitions/TrustMileDeliveryInfo'
+        '404':
+          description: the deliveryId was not found for this user.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /anonymous/tracking/{courierSlug}/{trackingNumber}:
+    parameters:
+      - name: courierSlug
+        in: path
+        type: string
+        required: true
+      - name: trackingNumber
+        in: path
+        type: string
+        required: true
+    get:
+      description: |
+        ##Service: Get Tracking
+
+        Retrieves the tracking information for a delivery.  The tracking information can be a mix of Courier and TrustMile tracking events.  THe events are returned in their correct order.
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: Delivery info but with tracking events inside it.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              delivery:
+                $ref: '#/definitions/DeliveryInfo'
+        '404':
+          description: the deliveryId was not found, or the user dfoes not have permission to view the tracking for this deliveryId
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /deliveries/{deliveryId}:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: |
+        ##Service: Get Tracking
+
+        Retrieves the tracking information for a delivery.
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: Delivery info but with tracking events inside it.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              delivery:
+                $ref: '#/definitions/DeliveryInfo'
+        '404':
+          description: the deliveryId was not found, or the user dfoes not have permission to view the tracking for this deliveryId
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+    put:
+      tags:
+        - deliveries
+      description: Update a given delivery with given deliveryId
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          description: Delivery Update
+          schema:
+            "$ref": '#/definitions/DeliveryUpdate'
+
+      responses:
+        '200':
+          description: the delivery was updated
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: the delivery was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '400':
+          description: A required field was not supplied
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /order/{orderId}:
+    parameters:
+      - name: orderId
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: Get details for a retailer order
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: Order Info.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              order:
+                $ref: '#/definitions/OrderInfo'
+        '404':
+          description: Order was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /deliveries/tracking/{deliveryId}:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      description: |
+        ##Service: Get Tracking
+
+        Retrieves the tracking information for a delivery.
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: Delivery info but with tracking events inside it.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              delivery:
+                $ref: '#/definitions/DeliveryInfo'
+        '404':
+          description: the deliveryId was not found, or the user dfoes not have permission to view the tracking for this deliveryId
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+
+  /deliveries/feedback/{deliveryId}:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    post:
+      tags:
+        - deliveries
+      description: |
+        ##Service: Send delivery feedback on a "delivered item"
+        The item must have tag u'Delivered' in aftership
+        Options are current:
+        Not delivered (multiselect of options below should clarify this one)
+        Had to collect inconveniently (poor failed delivery experience)
+        Goods damaged in transit (explicitly courier damage)
+        Left in exposed location (covers insecure and weather exposure)
+        Unprofessional courier (covers attitude, clothing, smell)
+        Didn’t knock or ring doorbell (courier honesty)
+        Took longer than promised (will be a common reason for dissatisfaction)
+
+      parameters:
+      - name: body
+        in: body
+        required: true
+        description: Delivery Feedback
+        schema:
+          "$ref": '#/definitions/DeliveryFeedback'
+
+
+      security:
+        - internalApiKey: []
+
+
+      responses:
+        '200':
+          description: Delivery info but with tracking events inside it.
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+
+        '404':
+          description: the deliveryId was not found, or the user dfoes not have permission to view the tracking for this deliveryId
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /deliveries/cardLookup/{cardId}:
+    parameters:
+      - name: cardId
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: |
+        ## A recipient uses the app to lookup a trustmile delivery based on a card
+        left in his/her mailbox.
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: Returns the name and address of the neighbour with the parcel and other data.
+          schema:
+            $ref: '#/definitions/NeighbourPickupInfo'
+        '404':
+          description: Item not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+
+
+
+
+  /deliveries/neighbourReceiveLookup/{trackingNumber}:
+    parameters:
+      - name: trackingNumber
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: |
+        ## Service: Neighbour Receiving parcels.
+        This is the first scan of an item which
+        Called by a neighbour.  returns all the articles to be picked up on this delivery.
+        They should be part of a TrustmileDelivery grouping of 1 or more parcels.
+        Returns all the article Ids.
+        (Note it is possible we want to return more info such as the desired end recipient etc)
+        ** Implemented **
+
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: a list of deliveries and their articles
+          schema:
+            $ref: '#/definitions/NeighbourReceiveLookup'
+
+        '403':
+          description: The delivery is not one of the neighbours deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: the delivery does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /deliveries/neighbourReceive/{deliveryId}:
+
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        required: true
+    post:
+      tags:
+        - deliveries
+      description:
+          Used by consumer to complete delivery, state should be NEIGHBOUR_RECEIVED for the TrustmileDelivery
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/NeighbourReceive'
+
+      responses:
+        '200':
+          description: the ID was set sucessfully
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '403':
+          description: The delivery is not one of the neighbours deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: the delivery does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: The the delivery has been picked up.  Modifications not allowed
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+# TODO: More duplication - should either use this or /deliveries/recipientHandover...
+# Currently this post has "recipient" as a parameter, what is this?
+#   1. We might be able to derive it based on the article ids if they have an end recipient against them.
+#   2. We could take an email address down at this point
+  /deliveries/recipientHandover/{deliveryId}:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        required: true
+    post:
+      tags:
+        - deliveries
+      description: |
+        ##Service: Do Pickup
+
+        Used by a neighbour to 'hand off' an article to a receiver.
+        The articles on the delivery and their state are returned from this request to 'piggy back' off the request.
+
+        _return data dependant on final schema design_
+        ** Impemented **
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/RecipientHandover'
+
+      responses:
+        '200':
+          description:  successful.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '403':
+          description: The delivery is not one of the neighbours deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: the delivery does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '409':
+          description: the article does not belong to the receiver
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the article has already been marked as handed over
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+    delete:
+      tags:
+        - deliveries
+      description: |
+        ##Service: Cancel Pickup
+
+        cancels a handoff
+        ** James TDB **
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description:  successful.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '403':
+          description: The delivery is not one of the neighbours deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: the delivery does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the handoff has completed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /user/presence:
+    post:
+      tags:
+        - location
+      description: |
+        ##Update users at home status
+        ** Implemented **
+
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/UserPresence'
+      responses:
+        '200':
+          description: status updated
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '404':
+          description: user not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '400':
+          description: A required field was not supplied
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /feedback:
+    post:
+      tags:
+        - feedback
+      description: \
+        Sends feedback to the trustmile team
+        consumerEmail may be removed, as we already know this from the users login
+        consumerName may be known if the user has provided it, it should be pre-filled in the app if this is the case
+        ** Implemeneted **
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/FeedbackMessage'
+      responses:
+        '200':
+          description: feedback sent
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+#  /promotion/view:
+#    get:
+#      tags:
+#        - promotion
+#    description:
+#      Get promotion content for a user
+#    security:
+#      - internalApiKey: []
+#    responses:
+#      '200':
+#        description: Returning promotion view content.
+#        schema:
+#          $ref: '#/definitions/PromotionView'
+#
+#      '401':
+#        description: Unauthorized
+#        schema:
+#          $ref: '#/definitions/401'
+#
+
+  /promotion/click/{promotionViewId}:
+    get:
+      tags:
+        - promotion
+    description:
+      User clicks an ad
+    security:
+      - internalApiKey: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          $ref: '#/definitions/PromotionClick'
+    responses:
+      '200':
+        description: Click successful
+        schema:
+          properties:
+            correlationID:
+              type: string
+      '401':
+        description: Unauthorized
+        schema:
+          $ref: '#/definitions/401'
+
+  /promotion/viewlist:
+    get:
+      tags:
+        - promotion view
+    description:
+      Shows all ads
+    security:
+      - internalApiKey: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          $ref: '#/definitions/PromotionViewList'
+    responses:
+      '200':
+        description: Successful
+        schema:
+          properties:
+            correlationID:
+              type: string
+      '401':
+        description:  Unauthorized
+        schema:
+          $ref: '#/definitions/401'
+
+definitions:
+  $include: 'definitions.yml'

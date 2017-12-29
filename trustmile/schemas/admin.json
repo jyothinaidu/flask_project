@@ -1,0 +1,1142 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0",
+    "title": "Trust Mile Admin Interface",
+    "description": "Describes the API that allows administrative functions.\nPrimarily dsigned to be used to allow the .NET website server to communicate with the python API backend\n\n## correlationID\n  This parameter is returned with every request.\n\n  The intent is that the server side will generate a unique id for each request, and feature this ID in all logging that occurs.  This will allow us to very easily to resolve issues faced consumers of the API.  When questioned with 'Why didn't this work' or 'This isn't working correctly' - we can identify the request server-side and easily identify events on the server associated with that request.\n\n  My intent is to generate a log/trace of every request\n\n## security\n  Requests will be secured with the X-admin-apiKey.  This will be a fixed secret shared key.\n\n## logon / logoff / sessions\n  There will be no logon or log off operations\n"
+  },
+  "host": "127.0.0.1:5001",
+  "schemes": [
+    "https"
+  ],
+  "basePath": "/admin",
+  "produces": [
+    "application/json"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "internalApiKey": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "X-admin-apiKey"
+    }
+  },
+  "paths": {
+    "/retailers": {
+      "get": {
+        "description": "returns basic details of all the retailers in the system\n",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "an array of all the retailers",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "retailers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "website_name": {
+                        "type": "string"
+                      },
+                      "website_url": {
+                        "type": "string"
+                      },
+                      "umbraco_id": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "courier_mappings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "sourceText": {
+                              "type": "string"
+                            },
+                            "courierName": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "email_integration_configuration": {
+                        "type": "object",
+                        "properties": {
+                          "from_email_addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "parsing_set": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "position_extractor": {
+                                  "type": "object",
+                                  "properties": {
+                                    "start": {
+                                      "type": "string"
+                                    },
+                                    "capture": {
+                                      "type": "string"
+                                    },
+                                    "end": {
+                                      "type": "string"
+                                    },
+                                    "item": {
+                                      "type": "string"
+                                    },
+                                    "repeat": {
+                                      "type": "boolean"
+                                    }
+                                  }
+                                },
+                                "repeat": {
+                                  "type": "boolean"
+                                },
+                                "extractors": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {
+                                        "type": "string"
+                                      },
+                                      "capture": {
+                                        "type": "string"
+                                      },
+                                      "end": {
+                                        "type": "string"
+                                      },
+                                      "item": {
+                                        "type": "string"
+                                      },
+                                      "repeat": {
+                                        "type": "boolean"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "required": [
+                "correlationID"
+              ],
+              "description": "Not authorized.  Either the authorization key was missing or not present",
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Adds a new retailer\n",
+        "parameters": [
+          {
+            "name": "Retailer",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "website_name": {
+                  "type": "string"
+                },
+                "website_url": {
+                  "type": "string"
+                },
+                "umbraco_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "courier_mappings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceText": {
+                        "type": "string"
+                      },
+                      "courierName": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "email_integration_configuration": {
+                  "type": "object",
+                  "properties": {
+                    "from_email_addresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "parsing_set": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "position_extractor": {
+                            "type": "object",
+                            "properties": {
+                              "start": {
+                                "type": "string"
+                              },
+                              "capture": {
+                                "type": "string"
+                              },
+                              "end": {
+                                "type": "string"
+                              },
+                              "item": {
+                                "type": "string"
+                              },
+                              "repeat": {
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "repeat": {
+                            "type": "boolean"
+                          },
+                          "extractors": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "start": {
+                                  "type": "string"
+                                },
+                                "capture": {
+                                  "type": "string"
+                                },
+                                "end": {
+                                  "type": "string"
+                                },
+                                "item": {
+                                  "type": "string"
+                                },
+                                "repeat": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "THe retailer was added",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "retailer": {
+                  "type": "object",
+                  "properties": {
+                    "website_name": {
+                      "type": "string"
+                    },
+                    "website_url": {
+                      "type": "string"
+                    },
+                    "umbraco_id": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "courier_mappings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceText": {
+                            "type": "string"
+                          },
+                          "courierName": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "email_integration_configuration": {
+                      "type": "object",
+                      "properties": {
+                        "from_email_addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "parsing_set": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "position_extractor": {
+                                "type": "object",
+                                "properties": {
+                                  "start": {
+                                    "type": "string"
+                                  },
+                                  "capture": {
+                                    "type": "string"
+                                  },
+                                  "end": {
+                                    "type": "string"
+                                  },
+                                  "item": {
+                                    "type": "string"
+                                  },
+                                  "repeat": {
+                                    "type": "boolean"
+                                  }
+                                }
+                              },
+                              "repeat": {
+                                "type": "boolean"
+                              },
+                              "extractors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "start": {
+                                      "type": "string"
+                                    },
+                                    "capture": {
+                                      "type": "string"
+                                    },
+                                    "end": {
+                                      "type": "string"
+                                    },
+                                    "item": {
+                                      "type": "string"
+                                    },
+                                    "repeat": {
+                                      "type": "boolean"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A retailer already exists for that Umbraco ID",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/retailers/{umbraco_id}": {
+      "parameters": [
+        {
+          "name": "umbraco_id",
+          "in": "path",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "get": {
+        "description": "Returns the retailer specified",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "retailer": {
+                  "type": "object",
+                  "properties": {
+                    "website_name": {
+                      "type": "string"
+                    },
+                    "website_url": {
+                      "type": "string"
+                    },
+                    "umbraco_id": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "courier_mappings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceText": {
+                            "type": "string"
+                          },
+                          "courierName": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "email_integration_configuration": {
+                      "type": "object",
+                      "properties": {
+                        "from_email_addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "parsing_set": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "position_extractor": {
+                                "type": "object",
+                                "properties": {
+                                  "start": {
+                                    "type": "string"
+                                  },
+                                  "capture": {
+                                    "type": "string"
+                                  },
+                                  "end": {
+                                    "type": "string"
+                                  },
+                                  "item": {
+                                    "type": "string"
+                                  },
+                                  "repeat": {
+                                    "type": "boolean"
+                                  }
+                                }
+                              },
+                              "repeat": {
+                                "type": "boolean"
+                              },
+                              "extractors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "start": {
+                                      "type": "string"
+                                    },
+                                    "capture": {
+                                      "type": "string"
+                                    },
+                                    "end": {
+                                      "type": "string"
+                                    },
+                                    "item": {
+                                      "type": "string"
+                                    },
+                                    "repeat": {
+                                      "type": "boolean"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Updates the retailer.\nif 'partialUpdate' is specified as true, only the fields in the Retailer object suppiled are updated.\nfields that are null are skipped\n\nif 'partialUpdate' is false, the retailer is replaced in it's entirity with the Retailer provided\n",
+        "parameters": [
+          {
+            "name": "RetailerUpdateRequest",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "website_name": {
+                  "type": "string"
+                },
+                "website_url": {
+                  "type": "string"
+                },
+                "umbraco_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "courier_mappings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceText": {
+                        "type": "string"
+                      },
+                      "courierName": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "email_integration_configuration": {
+                  "type": "object",
+                  "properties": {
+                    "from_email_addresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "parsing_set": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "position_extractor": {
+                            "type": "object",
+                            "properties": {
+                              "start": {
+                                "type": "string"
+                              },
+                              "capture": {
+                                "type": "string"
+                              },
+                              "end": {
+                                "type": "string"
+                              },
+                              "item": {
+                                "type": "string"
+                              },
+                              "repeat": {
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "repeat": {
+                            "type": "boolean"
+                          },
+                          "extractors": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "start": {
+                                  "type": "string"
+                                },
+                                "capture": {
+                                  "type": "string"
+                                },
+                                "end": {
+                                  "type": "string"
+                                },
+                                "item": {
+                                  "type": "string"
+                                },
+                                "repeat": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The umbracoID in the suppiled retailer object does not match the umbracoID in the URL"
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/neighbourSignup": {
+      "get": {
+        "description": "returns all neighbour signups\n",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "an array of all the neighbourSignups",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "neighbourSignups": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "emailAddress": {
+                        "type": "string"
+                      },
+                      "addressLine1": {
+                        "type": "string"
+                      },
+                      "addressLine2": {
+                        "type": "string"
+                      },
+                      "suburb": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "postcode": {
+                        "type": "string"
+                      },
+                      "phoneNumber": {
+                        "type": "string"
+                      },
+                      "over18": {
+                        "type": "boolean"
+                      },
+                      "hasIPhone": {
+                        "type": "boolean"
+                      },
+                      "workStatus": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "required": [
+                "correlationID"
+              ],
+              "description": "Not authorized.  Either the authorization key was missing or not present",
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Adds a new neighbourSignup\n",
+        "parameters": [
+          {
+            "name": "NeighbourSignup",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "emailAddress": {
+                  "type": "string"
+                },
+                "addressLine1": {
+                  "type": "string"
+                },
+                "addressLine2": {
+                  "type": "string"
+                },
+                "suburb": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "postcode": {
+                  "type": "string"
+                },
+                "phoneNumber": {
+                  "type": "string"
+                },
+                "over18": {
+                  "type": "boolean"
+                },
+                "hasIPhone": {
+                  "type": "boolean"
+                },
+                "workStatus": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The neighbourSignup was added",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "retailer": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "emailAddress": {
+                      "type": "string"
+                    },
+                    "addressLine1": {
+                      "type": "string"
+                    },
+                    "addressLine2": {
+                      "type": "string"
+                    },
+                    "suburb": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "postcode": {
+                      "type": "string"
+                    },
+                    "phoneNumber": {
+                      "type": "string"
+                    },
+                    "over18": {
+                      "type": "boolean"
+                    },
+                    "hasIPhone": {
+                      "type": "boolean"
+                    },
+                    "workStatus": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "401": {
+      "type": "object",
+      "required": [
+        "correlationID"
+      ],
+      "description": "Not authorized.  Either the authorization key was missing or not present",
+      "properties": {
+        "correlationID": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "Retailer": {
+      "type": "object",
+      "properties": {
+        "website_name": {
+          "type": "string"
+        },
+        "website_url": {
+          "type": "string"
+        },
+        "umbraco_id": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "courier_mappings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sourceText": {
+                "type": "string"
+              },
+              "courierName": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "email_integration_configuration": {
+          "type": "object",
+          "properties": {
+            "from_email_addresses": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parsing_set": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "position_extractor": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string"
+                      },
+                      "capture": {
+                        "type": "string"
+                      },
+                      "end": {
+                        "type": "string"
+                      },
+                      "item": {
+                        "type": "string"
+                      },
+                      "repeat": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "repeat": {
+                    "type": "boolean"
+                  },
+                  "extractors": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "start": {
+                          "type": "string"
+                        },
+                        "capture": {
+                          "type": "string"
+                        },
+                        "end": {
+                          "type": "string"
+                        },
+                        "item": {
+                          "type": "string"
+                        },
+                        "repeat": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "CourierMapping": {
+      "type": "object",
+      "properties": {
+        "sourceText": {
+          "type": "string"
+        },
+        "courierName": {
+          "type": "string"
+        }
+      }
+    },
+    "EmailIntegrationConfiguration": {
+      "type": "object",
+      "properties": {
+        "from_email_addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "parsing_set": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "position_extractor": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string"
+                  },
+                  "capture": {
+                    "type": "string"
+                  },
+                  "end": {
+                    "type": "string"
+                  },
+                  "item": {
+                    "type": "string"
+                  },
+                  "repeat": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "repeat": {
+                "type": "boolean"
+              },
+              "extractors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "start": {
+                      "type": "string"
+                    },
+                    "capture": {
+                      "type": "string"
+                    },
+                    "end": {
+                      "type": "string"
+                    },
+                    "item": {
+                      "type": "string"
+                    },
+                    "repeat": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "EmailParser": {
+      "type": "object",
+      "properties": {
+        "position_extractor": {
+          "type": "object",
+          "properties": {
+            "start": {
+              "type": "string"
+            },
+            "capture": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "item": {
+              "type": "string"
+            },
+            "repeat": {
+              "type": "boolean"
+            }
+          }
+        },
+        "repeat": {
+          "type": "boolean"
+        },
+        "extractors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string"
+              },
+              "capture": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              },
+              "item": {
+                "type": "string"
+              },
+              "repeat": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "EmailExtractor": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string"
+        },
+        "capture": {
+          "type": "string"
+        },
+        "end": {
+          "type": "string"
+        },
+        "item": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "boolean"
+        }
+      }
+    },
+    "NeighbourSignup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "addressLine1": {
+          "type": "string"
+        },
+        "addressLine2": {
+          "type": "string"
+        },
+        "suburb": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "postcode": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "over18": {
+          "type": "boolean"
+        },
+        "hasIPhone": {
+          "type": "boolean"
+        },
+        "workStatus": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

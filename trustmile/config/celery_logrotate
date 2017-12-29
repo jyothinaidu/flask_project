@@ -1,0 +1,11 @@
+/var/log/celery/*log {
+    daily
+    rotate 10
+    missingok
+    notifempty
+    compress
+    sharedscripts
+    postrotate
+        /home/ec2-user/trustmile-backend/trustmile/scripts/run_tm.sh celery restart
+    endscript
+}

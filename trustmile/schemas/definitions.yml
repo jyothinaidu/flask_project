@@ -1,0 +1,717 @@
+# definitions:
+
+  RecipientHandover:
+    type: object
+    required:
+      - articleIds
+    properties:
+      articleIds:
+        type: array
+        items:
+          type: string
+      recipientName:
+        type: string
+
+  NeighbourPickupInfo:
+    type: object
+    required:
+      - neighbourName
+      - neighbourAddress
+    properties:
+      neighbourName:
+        type: string
+      neighbourAddress:
+        $ref: '#/definitions/AccountAddress'
+      neighbourPhone:
+        type: string
+      recipientInfo:
+        type: string
+      packageDescription:
+        type: string
+      secretWord:
+        type: string
+      articleCount:
+        type: integer
+      courierName:
+        type: string
+      trackingNumber:
+        type: string
+      correlationID:
+        type: string
+
+  DeliveryFeedback:
+    type: object
+    required:
+      - rating
+    description: Delivery Feedback on delivered item
+    properties:
+      rating:
+        type: number
+        format: integer
+        enum: [1,2,3,4,5]
+      comment:
+        type: string
+      complaint:
+        type: array
+        items:
+          type: string
+      netPromoterScore:
+        type: number
+        format: integer
+        enum: [1,2,3,4,5,6,7,8,9,10]
+      netPromoterScoreComment:
+        type: string
+
+  DeliveryUpdate:
+    type: object
+    required:
+      - description
+    description: Just can update the description
+    properties:
+      description:
+        type: string
+
+
+  accountLogin:
+    description: Required data for user login
+    properties:
+      emailAddress:
+        type: string
+        description: The emailAddress to login with
+      password:
+        type: string
+        description: The password associated with the username
+      installationInformation:
+        $ref: '#/definitions/InstallationInformation'
+
+  PasswordUpdate:
+    type: object
+    required:
+      - oldPassword
+      - newPassword
+    description: Change the users password
+    properties:
+      oldPassword:
+        type: string
+      newPassword:
+        type: string
+
+  PasswordReset:
+    type: object
+    required:
+      - newPassword
+    description: Set the users password
+    properties:
+      newPassword:
+        type: string
+
+  AccountUpdate:
+    description: Users updated information, used for inputting name and address after initial register.
+    properties:
+      fullName:
+        type: string
+      trustmileNeighbour:
+        type: boolean
+      accountAddress:
+        $ref: '#/definitions/AccountAddress'
+      installationInformation:
+        $ref: '#/definitions/InstallationInformation'
+      userPreferences:
+        $ref: '#/definitions/Dictionary'
+
+  accountForgotPassword:
+    description: Forgotten password reset request
+    properties:
+      emailAddress:
+        type: string
+        description: The emailAddress to login with
+      resetToken:
+        type: string
+        description: The token provided on reset.
+
+  UserPresence:
+    description: Schema for updating the users status for an address.
+    properties:
+      location:
+        $ref: '#/definitions/AddressLocation'
+      status:
+        type: boolean
+
+
+  AddressLocation:
+    type: object
+    description: Essentially latitude and logitude of user's address
+    properties:
+      latitude:
+        type: number
+        format: double
+      longitude:
+        type: number
+        format: double
+
+  AccountAddress:
+    type: object
+    required:
+      - addressLine1
+      - addressLine2
+      - suburb
+      - state
+      - postcode
+      - countryCode
+    description: Object with users address information
+    properties:
+      addressLine1:
+        type: string
+      addressLine2:
+        type: string
+      suburb:
+        type: string
+      state:
+        type: string
+      postcode:
+        type: string
+      phoneNumber:
+        type: string
+      countryCode:
+        type: string
+      location:
+        $ref: '#/definitions/AddressLocation'
+
+  NeighbourReceiveLookup:
+    type: object
+    description: Returned as a result of scanning the first item of a TMD
+    properties:
+      deliveryId:
+        type: string
+      state:
+        type: string
+      correlationID:
+        type: string
+      articles:
+        type: array
+        items:
+          $ref: '#/definitions/article'
+      recipient:
+        type: string
+      alternateRecipient:
+        $ref: '#/definitions/UserInfo'
+
+  Account:
+    type: object
+    description: An object corrosponding to a users 'account'
+    properties:
+      emailAddress:
+        type: string
+      emailVerified:
+        type: boolean
+      fullName:
+        type: string
+      userName:
+        type: string
+      accountAddress:
+        $ref: '#/definitions/AccountAddress'
+      installationInformation:
+        $ref: '#/definitions/InstallationInformation'
+      userPreferences:
+        $ref: '#/definitions/Dictionary'
+
+
+  RecipientDetails:
+    type: object
+    required:
+      - fullName
+    description: When a "neighbour" hands over articles to "recipient", if user is unknown to TrustMile, neighbour
+                 shall provide email address.
+    properties:
+      emailAddress:
+        type: string
+      fullName:
+        type: string
+      address:
+        $ref: '#/definitions/AccountAddress'
+
+  NeighbourReceive:
+    type: object
+    description: List of articles for the neighbour receive post operation
+    properties:
+      articles:
+        type: array
+        items:
+          type: string
+
+  AddDelivery:
+    type: object
+    required:
+      - courierSlug
+      - trackingNumber
+      - description
+      - purchasedFrom
+    description: The tracking number and courier slug for a given parcel required to be added to the user's account. Retailer Name is optional
+    properties:
+      description:
+        type: string
+      courierSlug:
+        type: string
+      trackingNumber:
+        type: string
+      trackingNumber:
+        type: string
+
+  AccountRegister:
+    required:
+      - emailAddress
+      - password
+    description: Content required for registering an account
+    properties:
+      emailAddress:
+        type: string
+      password:
+        type: string
+      fullName:
+        type: string
+      installationInformation:
+        $ref: '#/definitions/InstallationInformation'
+      accountAddress:
+        $ref: '#/definitions/AccountAddress'
+
+  AnonymousRegister:
+    required:
+      - installationInformation
+    description: anonymous registration
+    properties:
+      installationInformation:
+        $ref: '#/definitions/InstallationInformation'
+
+  DeliveryInfo:
+    type: object
+    description: A single summary of delivery info
+    properties:
+      description:
+        type: string
+      trackingNumber:
+        type: string
+      courierName:
+        type: string
+      courierPhone:
+        type: string
+      imageUrl:
+        type: string
+      courierWeb:
+        type: string
+      latestStatus:
+        type: string
+      courierTrackingUrl:
+        type: string
+      trackingInfoSupported:
+        type: boolean
+      orderId:
+        type: string
+      retailerImageUrl:
+        type: string
+      retailerName:
+        type: string
+      displayStatus:
+        type: string
+      isDelivered:
+        type: boolean
+      isNeighbour:
+        type: boolean
+      promotionSourceUrl:
+        type: string
+      promotionDestUrl:
+        type: string
+      promotionViewId:
+        type: string
+      promotionRetailerName:
+        type: string
+      cardNumber:
+        type: string
+      feedbackLeft:
+        type: boolean
+      deliveryId:
+        type: string
+        format: uuid
+      deliveryIsValid:
+        type: boolean
+      articles:
+        type: array
+        items:
+          $ref: '#/definitions/article'
+      tag:
+        type: string
+      trackingEvents:
+        type: array
+        items:
+          $ref: '#/definitions/TrackingInformation'
+
+  OrderInfo:
+    type: object
+    description: Details pertaining to a retailer order
+    properties:
+      description:
+        type: string
+      orderId:
+        type: string
+      retailerName:
+        type: string
+      retailerPhone:
+        type: string
+      retailerImageUrl:
+        type: string
+      retailerHelpUrl:
+        type: string
+      orderEmailUrl:
+        type: string
+      dispatchEmailUrl:
+        type: string
+
+
+  TrustMileDeliveryInfo:
+    type: object
+    description: Detail info about a trustmile delivery
+    properties:
+      articles:
+        type: array
+        items:
+          $ref: '#/definitions/article'
+      recipientName:
+        type: string
+      secretWord:
+        type: string
+
+  # TODO: Must clean this up to use one defintion of article.
+  article:
+    description: A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.
+    properties:
+      articleId:
+        type: string
+      trackingNumber:
+         type: string
+
+  Courier:
+    description: A courier company
+    properties:
+      courierId:
+        type: string
+        format: uuid
+      name:
+        type: string
+
+
+  TrackingInformation:
+    description: reperesents 1 tracking event for a delivery
+    properties:
+      isTrustMileEvent:
+        description: true means this is a trustmile event, false means this is a courier event
+        type: boolean
+      tag:
+        description: a code to describe this event, for courier events the tag will be the AfterShip tag.  For trustmile events the set of tages has not yet been determined
+        type: string
+      message:
+        description: a free-form text description of the event
+        type: string
+      slug:
+        description: tracking slug
+        type: string
+      tacking_number:
+        type: string
+      checkpoint_time:
+        type: string
+        format: datetime
+      location:
+        type: string
+
+  KeyValuePair:
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+
+
+  Dictionary:
+    properties:
+      values:
+        type: array
+        items:
+          $ref: '#/definitions/KeyValuePair'
+
+  InstallationInformation:
+    description: A collection of information that describes an instance of the application and what device it is running on.
+    properties:
+      OSType:
+        type: string
+        description:
+          Android or Apple or other
+      OSMajorVersion:
+        type: string
+        description: The major version of the mobile OS
+      OSMinorVersion:
+        type: string
+        description: the minor version of the mobile OS
+      DeviceIdentifier:
+        type: string
+        description: the device ID of the mobile device
+      ApplicationVersion:
+        type: string
+        description: the version of the application installed, such as 1  or 1.1 or 1.1.1
+
+  ApplicationSettings:
+    description: a set of properties used to enable & disable features on the client
+    properties:
+      showMessages:
+        description: show/hide the messages icon (no messages until ready for neighbour collections)
+        type: boolean
+      offerNeighbourSignupInMenu:
+        description: yes/no to offer neighbour signup in the SETTINGS menu
+        type: boolean
+      promptForNeighbourSignup:
+        description: yes/no to show a neighbour signup prompt on My Deliveries
+        type: boolean
+      isTrustMileNeighbour:
+        description: yes/no that this user has given permission to receive deliveries on behalf of others
+        type: boolean
+      heartbeat:
+        description: 0 (off) or greater, being the number of minutes between sending heartbeats to the server
+        type: integer
+      trustMileFeedback:
+        description: show / hide capture of feedback for TrustMile on feedback screen
+        type: boolean
+
+  Conversation:
+    description: represents a single conversation.  A conversation may or may not be tied to a delivery.  It is also possible to have a conversation that has not yet started - the messages tab will show a list of conversation AND neighbour pickups that the user can create a conversation againt, in this situation the conversationId will be null
+    properties:
+      conversationId:
+        description:  The conversationId of the conversation.  This value can be null in cases where the user has the ability to start a conversation but no conversation has been started.  A conversationId can exist with 0 messages in the conversation.
+        type: string
+        format: uuid
+      unreadMessage:
+        description: the number of messagesd in the conversation the user has not read
+        type: integer
+      totalMessages:
+        description: the total number of messages in the conversation
+        type: integer
+      deliveryId:
+        description: If this message relates to a , the ID of the delivery.  Null indicates a  system message
+        type: string
+        format: uuid
+      deliveriestate:
+        description: the collection state of the pickup (delivery).  one of 'ready to pickup', 'collected awaiting feedback', 'collected, closed'
+        type: string
+      neighbourName:
+        description: the name of the neighbour
+        type: string
+      neighbourAddress:
+        description: the pickup address of the neighbour
+        type: string
+      systemMessageTitle:
+        description: when this is a system message, this is the title to display on the conversations screen
+
+  Message:
+    description: a single message in a conversation
+    properties:
+      messageId:
+        type: string
+        format: uuid
+      sequenceNumber:
+        description: the order of this message in this conversation
+        type: integer
+      isUnread:
+        description: has the user read this message or not.
+        type: boolean
+      from:
+        description: text description of the person who wrote this message.
+        type: string
+      isFromMe:
+        description: was this message sent but the requesting user
+        type: boolean
+      messageContent:
+        description: the content of the message
+        type: string
+
+  FeedbackMessage:
+    description: the content of a feedback post
+    properties:
+      consumerName:
+        type: string
+      consumerEmail:
+        type: string
+      feedbackMessage:
+        type: string
+
+
+
+  Login:
+    description: Required data for  login
+    properties:
+      username:
+        type: string
+        description: The username to login with
+      password:
+        type: string
+        description: The password associated with the username
+      installationInformation:
+        $ref: '#/definitions/InstallationInformation'
+
+  401:
+    type: object
+    required:
+      - correlationID
+    description: Not authorized.  Either the authorization key was missing or not present
+    properties:
+      correlationID:
+        type: string
+        format: uuid
+      reason:
+        type: string
+
+  GeoLocation:
+    description: Essentially latitude and logitude of user's address
+    type: object
+    required:
+      - latitude
+      - longitude
+    properties:
+      latitude:
+        type: number
+        format: double
+      longitude:
+        type: number
+        format: double
+
+  Delivery:
+    type: object
+    required:
+      - articles
+    properties:
+      deliveryId:
+        type: string
+      articles:
+        type: array
+        items:
+          $ref: '#/definitions/article'
+      neighbour:
+        $ref: "#/definitions/UserInfo"
+      recipientInfo:
+        $ref: '#/definitions/RecipientInfo'
+      state:
+        type: string
+      lastUpdated:
+        type: dateTime
+
+  CreateDelivery:
+    type: object
+    required:
+      - articles
+      - neighbourId
+    properties:
+      articles:
+        type: array
+        items:
+          $ref: '#/definitions/article'
+      neighbourId:
+        type: string
+      location:
+        $ref: '#/definitions/GeoLocation'
+
+  RecipientInfo:
+    type: object
+    properties:
+      fullName:
+        type: string
+      emailAddress:
+        type: string
+        format: email
+      phoneNumber:
+        type: string
+
+  alternateRecipient:
+    properties:
+      consumerId:
+        type: string
+        description: the Id of the alternate recipient
+      email:
+        type: string
+      fullName:
+        type: string
+      phoneNumber:
+        type: string
+      physicalAddress:
+        properties:
+          latitude:
+            description: the latitude of the recipient
+            type: number
+            format: double
+          longitude:
+            description: the longitude of the recipient
+            type: number
+            format: double
+          unitNumber:
+            type: string
+          streetNumber:
+            type: string
+          streetName:
+            type: string
+          streetType:
+            type: string
+          suburb:
+            type: string
+          postcode:
+            type: string
+            pattern: '^[0-9]{4}$'
+    required:
+      - consumerId
+
+
+  UserInfo:
+    type: object
+    description: An object corrosponding to a users 'account'
+    properties:
+      id:
+        type: string
+      emailAddress:
+        type: string
+      fullName:
+        type: string
+      travelTimeText:
+        type: string
+      travelTimeValue:
+        type: integer
+      accountAddress:
+        $ref: '#/definitions/AccountAddress'
+
+  Retailer:
+    properties:
+      name:
+        type: string
+      contactNumber:
+        type: string
+
+  DelegateDelivery:
+    properties:
+      email:
+        type: string
+      deliveryId:
+        type: string
+        format: uuid
+
+  PromotionView:
+    properties:
+      promotionUrl:
+        type: string
+      promotionId:
+        type: string
+      promotionViewId:
+        type: string
+
+  PromotionClick:
+    properties:
+      promotionId:
+        type: string
+
+  PromotionViewList:
+    properties:
+      promotionUrl:
+        type: string
+      promotionName:
+        type: string

@@ -1,0 +1,3127 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "0.1.1",
+    "title": "Trust Mile Courier Application"
+  },
+  "host": "api.trustmile.com",
+  "schemes": [
+    "https"
+  ],
+  "basePath": "/courier/v1",
+  "produces": [
+    "application/json"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "internalApiKey": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "X-courier-apiKey"
+    }
+  },
+  "paths": {
+    "/account": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "description": "## Service: Check Signup, Get Account.\n** works **\n\nReturs the users account, including if the email addres has been verified.\n",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the status of an account",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "account": {
+                  "type": "object",
+                  "description": "An object corrosponding to a users 'account'",
+                  "properties": {
+                    "emailAddress": {
+                      "type": "string"
+                    },
+                    "emailVerified": {
+                      "type": "boolean"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    },
+                    "userName": {
+                      "type": "string"
+                    },
+                    "accountAddress": {
+                      "type": "object",
+                      "required": [
+                        "addressLine1",
+                        "addressLine2",
+                        "suburb",
+                        "state",
+                        "postcode",
+                        "countryCode"
+                      ],
+                      "description": "Object with users address information",
+                      "properties": {
+                        "addressLine1": {
+                          "type": "string"
+                        },
+                        "addressLine2": {
+                          "type": "string"
+                        },
+                        "suburb": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "postcode": {
+                          "type": "string"
+                        },
+                        "phoneNumber": {
+                          "type": "string"
+                        },
+                        "countryCode": {
+                          "type": "string"
+                        },
+                        "location": {
+                          "type": "object",
+                          "description": "Essentially latitude and logitude of user's address",
+                          "properties": {
+                            "latitude": {
+                              "type": "number",
+                              "format": "double"
+                            },
+                            "longitude": {
+                              "type": "number",
+                              "format": "double"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "installationInformation": {
+                      "description": "A collection of information that describes an instance of the application and what device it is running on.",
+                      "properties": {
+                        "OSType": {
+                          "type": "string",
+                          "description": "Android or Apple or other"
+                        },
+                        "OSMajorVersion": {
+                          "type": "string",
+                          "description": "The major version of the mobile OS"
+                        },
+                        "OSMinorVersion": {
+                          "type": "string",
+                          "description": "the minor version of the mobile OS"
+                        },
+                        "DeviceIdentifier": {
+                          "type": "string",
+                          "description": "the device ID of the mobile device"
+                        },
+                        "ApplicationVersion": {
+                          "type": "string",
+                          "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+                        }
+                      }
+                    },
+                    "userPreferences": {
+                      "properties": {
+                        "values": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "key": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "required": [
+                "correlationID"
+              ],
+              "description": "Not authorized.  Either the authorization key was missing or not present",
+              "properties": {
+                "correlationID": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "description": "## Service: Reset Signup\n** not implemented **\n\nAllows a user to delete their account.  Currently only supported \nwhen the email address has not been verified.\n\nThe account to delete is based on the apiKey.  After this call \nthe apiKey is invalidated.\n\n## [status: not implemented]\n",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the account was deleted",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "required": [
+                "correlationID"
+              ],
+              "description": "Not authorized.  Either the authorization key was missing or not present",
+              "properties": {
+                "correlationID": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "the email address on the account is already verified",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "description": "## __Service: Login__\n** works ** \nLogs a courier in to their account and returns the API key to be used in subsequent requests.  Returns the status of the users email verification via the 'account' object\n",
+        "parameters": [
+          {
+            "name": "LoginRequest",
+            "in": "body",
+            "description": "Courier login credentials",
+            "required": true,
+            "schema": {
+              "description": "Required data for  login",
+              "properties": {
+                "username": {
+                  "type": "string",
+                  "description": "The username to login with"
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password associated with the username"
+                },
+                "installationInformation": {
+                  "description": "A collection of information that describes an instance of the application and what device it is running on.",
+                  "properties": {
+                    "OSType": {
+                      "type": "string",
+                      "description": "Android or Apple or other"
+                    },
+                    "OSMajorVersion": {
+                      "type": "string",
+                      "description": "The major version of the mobile OS"
+                    },
+                    "OSMinorVersion": {
+                      "type": "string",
+                      "description": "the minor version of the mobile OS"
+                    },
+                    "DeviceIdentifier": {
+                      "type": "string",
+                      "description": "the device ID of the mobile device"
+                    },
+                    "ApplicationVersion": {
+                      "type": "string",
+                      "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the login was sucessful.  The courier's 'account'",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "apiKey": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "userId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "username or password incorrect",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/password": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "** works **\n\nused to update a couriers username and password\n",
+        "parameters": [
+          {
+            "name": "LoginRequest",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "password": {
+                  "type": "string",
+                  "description": "The users current password"
+                },
+                "newPassword": {
+                  "type": "string",
+                  "description": "The new password for the user"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The password was sucessfully changed",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The password did not match the users password.",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The password did not meet complexity requirements",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "used to log out ** works **",
+        "responses": {
+          "200": {
+            "description": "User was logged out",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deliveries": {
+      "get": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "Retrieves a list of deliveries. ** works, no history yet ** The default is to return the currently open deliveries The optionasl parameter 'history' will get a list of the last 50 deliveries within the last 3 months.",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "GetHistory",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "properties": {
+                "history": {
+                  "type": "boolean",
+                  "description": "set to true to retereive historical deliveries"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "an array of open delivery deliveries",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "deliveries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "articles"
+                    ],
+                    "properties": {
+                      "deliveryId": {
+                        "type": "string"
+                      },
+                      "articles": {
+                        "type": "array",
+                        "items": {
+                          "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                          "properties": {
+                            "articleId": {
+                              "type": "string"
+                            },
+                            "trackingNumber": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "neighbour": {
+                        "type": "object",
+                        "description": "An object corrosponding to a users 'account'",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "emailAddress": {
+                            "type": "string"
+                          },
+                          "fullName": {
+                            "type": "string"
+                          },
+                          "travelTimeText": {
+                            "type": "string"
+                          },
+                          "travelTimeValue": {
+                            "type": "integer"
+                          },
+                          "accountAddress": {
+                            "type": "object",
+                            "required": [
+                              "addressLine1",
+                              "addressLine2",
+                              "suburb",
+                              "state",
+                              "postcode",
+                              "countryCode"
+                            ],
+                            "description": "Object with users address information",
+                            "properties": {
+                              "addressLine1": {
+                                "type": "string"
+                              },
+                              "addressLine2": {
+                                "type": "string"
+                              },
+                              "suburb": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string"
+                              },
+                              "postcode": {
+                                "type": "string"
+                              },
+                              "phoneNumber": {
+                                "type": "string"
+                              },
+                              "countryCode": {
+                                "type": "string"
+                              },
+                              "location": {
+                                "type": "object",
+                                "description": "Essentially latitude and logitude of user's address",
+                                "properties": {
+                                  "latitude": {
+                                    "type": "number",
+                                    "format": "double"
+                                  },
+                                  "longitude": {
+                                    "type": "number",
+                                    "format": "double"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "recipientInfo": {
+                        "type": "object",
+                        "properties": {
+                          "fullName": {
+                            "type": "string"
+                          },
+                          "emailAddress": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "phoneNumber": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "lastUpdated": {
+                        "type": "dateTime"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "creates a new trustmile delivery event. The state of the TrustmileDelivery will be TRANSIT_TO_NEIGHBOUR ** works **",
+        "parameters": [
+          {
+            "name": "CreateTrustmileDelivery",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "articles",
+                "neighbourId"
+              ],
+              "properties": {
+                "articles": {
+                  "type": "array",
+                  "items": {
+                    "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                    "properties": {
+                      "articleId": {
+                        "type": "string"
+                      },
+                      "trackingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "neighbourId": {
+                  "type": "string"
+                },
+                "location": {
+                  "description": "Essentially latitude and logitude of user's address",
+                  "type": "object",
+                  "required": [
+                    "latitude",
+                    "longitude"
+                  ],
+                  "properties": {
+                    "latitude": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "format": "double"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the new deliveryID",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "deliveryID": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deliveries/state/{deliveryState}": {
+      "get": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "Retrieves a list of deliveries with a given state",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deliveryState",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "NEWLY_CREATED",
+              "TRANSIT_TO_NEIGHBOUR",
+              "NEIGHBOUR_RECEIVED",
+              "RECIPIENT_RECEIVED",
+              "ABORTING",
+              "NEIGHBOUR_ABORTED",
+              "COURIER_ABORTED",
+              "CANCELLED",
+              "RECIPIENT_ARCHIVED",
+              "TIME_ARCHIVED"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "an array of deliveries",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "deliveries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "articles"
+                    ],
+                    "properties": {
+                      "deliveryId": {
+                        "type": "string"
+                      },
+                      "articles": {
+                        "type": "array",
+                        "items": {
+                          "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                          "properties": {
+                            "articleId": {
+                              "type": "string"
+                            },
+                            "trackingNumber": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "neighbour": {
+                        "type": "object",
+                        "description": "An object corrosponding to a users 'account'",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "emailAddress": {
+                            "type": "string"
+                          },
+                          "fullName": {
+                            "type": "string"
+                          },
+                          "travelTimeText": {
+                            "type": "string"
+                          },
+                          "travelTimeValue": {
+                            "type": "integer"
+                          },
+                          "accountAddress": {
+                            "type": "object",
+                            "required": [
+                              "addressLine1",
+                              "addressLine2",
+                              "suburb",
+                              "state",
+                              "postcode",
+                              "countryCode"
+                            ],
+                            "description": "Object with users address information",
+                            "properties": {
+                              "addressLine1": {
+                                "type": "string"
+                              },
+                              "addressLine2": {
+                                "type": "string"
+                              },
+                              "suburb": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string"
+                              },
+                              "postcode": {
+                                "type": "string"
+                              },
+                              "phoneNumber": {
+                                "type": "string"
+                              },
+                              "countryCode": {
+                                "type": "string"
+                              },
+                              "location": {
+                                "type": "object",
+                                "description": "Essentially latitude and logitude of user's address",
+                                "properties": {
+                                  "latitude": {
+                                    "type": "number",
+                                    "format": "double"
+                                  },
+                                  "longitude": {
+                                    "type": "number",
+                                    "format": "double"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "recipientInfo": {
+                        "type": "object",
+                        "properties": {
+                          "fullName": {
+                            "type": "string"
+                          },
+                          "emailAddress": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "phoneNumber": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "lastUpdated": {
+                        "type": "dateTime"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deliveries/{deliveryId}": {
+      "parameters": [
+        {
+          "name": "deliveryId",
+          "in": "path",
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        }
+      ],
+      "get": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "returns the delivery specified and associated articles ** works **",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The delivery and associated parcels",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "delivery": {
+                  "type": "object",
+                  "required": [
+                    "articles"
+                  ],
+                  "properties": {
+                    "deliveryId": {
+                      "type": "string"
+                    },
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                        "properties": {
+                          "articleId": {
+                            "type": "string"
+                          },
+                          "trackingNumber": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "neighbour": {
+                      "type": "object",
+                      "description": "An object corrosponding to a users 'account'",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "emailAddress": {
+                          "type": "string"
+                        },
+                        "fullName": {
+                          "type": "string"
+                        },
+                        "travelTimeText": {
+                          "type": "string"
+                        },
+                        "travelTimeValue": {
+                          "type": "integer"
+                        },
+                        "accountAddress": {
+                          "type": "object",
+                          "required": [
+                            "addressLine1",
+                            "addressLine2",
+                            "suburb",
+                            "state",
+                            "postcode",
+                            "countryCode"
+                          ],
+                          "description": "Object with users address information",
+                          "properties": {
+                            "addressLine1": {
+                              "type": "string"
+                            },
+                            "addressLine2": {
+                              "type": "string"
+                            },
+                            "suburb": {
+                              "type": "string"
+                            },
+                            "state": {
+                              "type": "string"
+                            },
+                            "postcode": {
+                              "type": "string"
+                            },
+                            "phoneNumber": {
+                              "type": "string"
+                            },
+                            "countryCode": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "object",
+                              "description": "Essentially latitude and logitude of user's address",
+                              "properties": {
+                                "latitude": {
+                                  "type": "number",
+                                  "format": "double"
+                                },
+                                "longitude": {
+                                  "type": "number",
+                                  "format": "double"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "recipientInfo": {
+                      "type": "object",
+                      "properties": {
+                        "fullName": {
+                          "type": "string"
+                        },
+                        "emailAddress": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "phoneNumber": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "lastUpdated": {
+                      "type": "dateTime"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "cancels the use of trust mile for this delivery",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the delivery was cancelled",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "sets the state for this delivery. States are NEWLY_CREATED TRANSIT_TO_NEIGHBOUR NEIGHBOUR_RECEIVED RECIPIENT_RECEIVED ABORTING NEIGHBOUR_ABORTED COURIER_ABORTED CANCELLED RECIPIENT_ARCHIVED TIME_ARCHIVED ** works **",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deliveryState",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "deliveryState": {
+                  "type": "string",
+                  "enum": [
+                    "NEWLY_CREATED",
+                    "TRANSIT_TO_NEIGHBOUR",
+                    "NEIGHBOUR_RECEIVED",
+                    "RECIPIENT_RECEIVED",
+                    "ABORTING",
+                    "NEIGHBOUR_ABORTED",
+                    "COURIER_ABORTED",
+                    "CANCELLED",
+                    "RECIPIENT_ARCHIVED",
+                    "TIME_ARCHIVED"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "neighbourId",
+            "in": "body",
+            "schema": {
+              "properties": {
+                "neighbourId": {
+                  "type": "uuid"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the state was set correctly",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deliveries/{deliveryId}/articles/": {
+      "parameters": [
+        {
+          "name": "deliveryId",
+          "in": "path",
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        }
+      ],
+      "get": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "returns a list of articles associated with this delivery ** works **",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "a list of articles associated with this delivery",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "parcels": {
+                  "description": "an array of articles that are in this delivery",
+                  "type": "array",
+                  "items": {
+                    "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                    "properties": {
+                      "articleId": {
+                        "type": "string"
+                      },
+                      "trackingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "adds an article to this delivery ** works **",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "article",
+            "in": "body",
+            "description": "the description",
+            "required": true,
+            "schema": {
+              "properties": {
+                "trackingNumber": {
+                  "type": "string",
+                  "description": "the tracking number scanned in from a barcode or typed in."
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The parcel was added",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "parcels": {
+                  "description": "an array of articles that are in this delivery",
+                  "type": "array",
+                  "items": {
+                    "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                    "properties": {
+                      "articleId": {
+                        "type": "string"
+                      },
+                      "trackingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "409": {
+            "description": "a parcel with that tracking number and that item number already exists in an open delivery for this courier.",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "The message to display to the user"
+                },
+                "parcels": {
+                  "description": "an array of articles that are in this delivery",
+                  "type": "array",
+                  "items": {
+                    "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                    "properties": {
+                      "articleId": {
+                        "type": "string"
+                      },
+                      "trackingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/{trackingNumber}": {
+      "parameters": [
+        {
+          "name": "trackingNumber",
+          "type": "string",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "get article for tracking number (NB. this assumes it that trackingnumber 1-1 on article.) ** works **",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The article associated with this trackingnumber",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "article": {
+                  "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                  "properties": {
+                    "articleId": {
+                      "type": "string"
+                    },
+                    "trackingNumber": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "either the deliveryID or trackingNumber was not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "deliveries"
+        ],
+        "description": "deletes the article from the delivery ** works ** removes delivery info from article, article record left intact",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the tracking number and parcels were deleted",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "articles": {
+                  "type": "array",
+                  "items": {
+                    "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                    "properties": {
+                      "articleId": {
+                        "type": "string"
+                      },
+                      "trackingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "either the deliveryID or trackingNumber was not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found"
+                },
+                "articles": {
+                  "description": "a list of articles on the associated delivery",
+                  "type": "array",
+                  "items": {
+                    "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                    "properties": {
+                      "articleId": {
+                        "type": "string"
+                      },
+                      "trackingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "the article could not be deleted as the delivery is in a state that prohibits the action, such as after the delivery has been handed over to an alternate recipient",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason"
+                },
+                "articles": {
+                  "description": "a list of articles on the associated delivery",
+                  "type": "array",
+                  "items": {
+                    "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+                    "properties": {
+                      "articleId": {
+                        "type": "string"
+                      },
+                      "trackingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nearestNeighbours/{latitude}/{longitude}": {
+      "parameters": [
+        {
+          "name": "latitude",
+          "in": "path",
+          "type": "number",
+          "format": "double",
+          "required": true
+        },
+        {
+          "name": "longitude",
+          "type": "number",
+          "format": "double",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "tags": [
+          "location"
+        ],
+        "description": "Retrieves a list of alternate near the courier's location. ** works ** distance calculation needs work",
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "alternate recipient response",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "alternateRecipients": {
+                  "description": "an array of alternate recipients, ordered by proximity to the GPS coordinates stored against the delivery",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "description": "An object corrosponding to a users 'account'",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "emailAddress": {
+                        "type": "string"
+                      },
+                      "fullName": {
+                        "type": "string"
+                      },
+                      "travelTimeText": {
+                        "type": "string"
+                      },
+                      "travelTimeValue": {
+                        "type": "integer"
+                      },
+                      "accountAddress": {
+                        "type": "object",
+                        "required": [
+                          "addressLine1",
+                          "addressLine2",
+                          "suburb",
+                          "state",
+                          "postcode",
+                          "countryCode"
+                        ],
+                        "description": "Object with users address information",
+                        "properties": {
+                          "addressLine1": {
+                            "type": "string"
+                          },
+                          "addressLine2": {
+                            "type": "string"
+                          },
+                          "suburb": {
+                            "type": "string"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "postcode": {
+                            "type": "string"
+                          },
+                          "phoneNumber": {
+                            "type": "string"
+                          },
+                          "countryCode": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": "object",
+                            "description": "Essentially latitude and logitude of user's address",
+                            "properties": {
+                              "latitude": {
+                                "type": "number",
+                                "format": "double"
+                              },
+                              "longitude": {
+                                "type": "number",
+                                "format": "double"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "type": "object",
+            "required": [
+              "correlationID"
+            ],
+            "description": "Not authorized.  Either the authorization key was missing or not present",
+            "properties": {
+              "correlationID": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "No neighbours found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "401": {
+      "type": "object",
+      "required": [
+        "correlationID"
+      ],
+      "description": "Not authorized.  Either the authorization key was missing or not present",
+      "properties": {
+        "correlationID": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "RecipientHandover": {
+      "type": "object",
+      "required": [
+        "articleIds"
+      ],
+      "properties": {
+        "articleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recipientName": {
+          "type": "string"
+        }
+      }
+    },
+    "NeighbourPickupInfo": {
+      "type": "object",
+      "required": [
+        "neighbourName",
+        "neighbourAddress"
+      ],
+      "properties": {
+        "neighbourName": {
+          "type": "string"
+        },
+        "neighbourAddress": {
+          "type": "object",
+          "required": [
+            "addressLine1",
+            "addressLine2",
+            "suburb",
+            "state",
+            "postcode",
+            "countryCode"
+          ],
+          "description": "Object with users address information",
+          "properties": {
+            "addressLine1": {
+              "type": "string"
+            },
+            "addressLine2": {
+              "type": "string"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "location": {
+              "type": "object",
+              "description": "Essentially latitude and logitude of user's address",
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "longitude": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        },
+        "neighbourPhone": {
+          "type": "string"
+        },
+        "recipientInfo": {
+          "type": "string"
+        },
+        "packageDescription": {
+          "type": "string"
+        },
+        "secretWord": {
+          "type": "string"
+        },
+        "articleCount": {
+          "type": "integer"
+        },
+        "courierName": {
+          "type": "string"
+        },
+        "trackingNumber": {
+          "type": "string"
+        },
+        "correlationID": {
+          "type": "string"
+        }
+      }
+    },
+    "DeliveryFeedback": {
+      "type": "object",
+      "required": [
+        "rating"
+      ],
+      "description": "Delivery Feedback on delivered item",
+      "properties": {
+        "rating": {
+          "type": "number",
+          "format": "integer",
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "comment": {
+          "type": "string"
+        },
+        "complaint": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "accountLogin": {
+      "description": "Required data for user login",
+      "properties": {
+        "emailAddress": {
+          "type": "string",
+          "description": "The emailAddress to login with"
+        },
+        "password": {
+          "type": "string",
+          "description": "The password associated with the username"
+        },
+        "installationInformation": {
+          "description": "A collection of information that describes an instance of the application and what device it is running on.",
+          "properties": {
+            "OSType": {
+              "type": "string",
+              "description": "Android or Apple or other"
+            },
+            "OSMajorVersion": {
+              "type": "string",
+              "description": "The major version of the mobile OS"
+            },
+            "OSMinorVersion": {
+              "type": "string",
+              "description": "the minor version of the mobile OS"
+            },
+            "DeviceIdentifier": {
+              "type": "string",
+              "description": "the device ID of the mobile device"
+            },
+            "ApplicationVersion": {
+              "type": "string",
+              "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+            }
+          }
+        }
+      }
+    },
+    "PasswordUpdate": {
+      "type": "object",
+      "required": [
+        "oldPassword",
+        "newPassword"
+      ],
+      "description": "Change the users password",
+      "properties": {
+        "oldPassword": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "PasswordReset": {
+      "type": "object",
+      "required": [
+        "newPassword"
+      ],
+      "description": "Set the users password",
+      "properties": {
+        "newPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "AccountUpdate": {
+      "description": "Users updated information, used for inputting name and address after initial register.",
+      "properties": {
+        "fullName": {
+          "type": "string"
+        },
+        "trustmileNeighbour": {
+          "type": "boolean"
+        },
+        "accountAddress": {
+          "type": "object",
+          "required": [
+            "addressLine1",
+            "addressLine2",
+            "suburb",
+            "state",
+            "postcode",
+            "countryCode"
+          ],
+          "description": "Object with users address information",
+          "properties": {
+            "addressLine1": {
+              "type": "string"
+            },
+            "addressLine2": {
+              "type": "string"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "location": {
+              "type": "object",
+              "description": "Essentially latitude and logitude of user's address",
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "longitude": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        },
+        "installationInformation": {
+          "description": "A collection of information that describes an instance of the application and what device it is running on.",
+          "properties": {
+            "OSType": {
+              "type": "string",
+              "description": "Android or Apple or other"
+            },
+            "OSMajorVersion": {
+              "type": "string",
+              "description": "The major version of the mobile OS"
+            },
+            "OSMinorVersion": {
+              "type": "string",
+              "description": "the minor version of the mobile OS"
+            },
+            "DeviceIdentifier": {
+              "type": "string",
+              "description": "the device ID of the mobile device"
+            },
+            "ApplicationVersion": {
+              "type": "string",
+              "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+            }
+          }
+        },
+        "userPreferences": {
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "accountForgotPassword": {
+      "description": "Forgotten password reset request",
+      "properties": {
+        "emailAddress": {
+          "type": "string",
+          "description": "The emailAddress to login with"
+        },
+        "resetToken": {
+          "type": "string",
+          "description": "The token provided on reset."
+        }
+      }
+    },
+    "UserPresence": {
+      "description": "Schema for updating the users status for an address.",
+      "properties": {
+        "location": {
+          "type": "object",
+          "description": "Essentially latitude and logitude of user's address",
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "format": "double"
+            },
+            "longitude": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        "status": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AddressLocation": {
+      "type": "object",
+      "description": "Essentially latitude and logitude of user's address",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "AccountAddress": {
+      "type": "object",
+      "required": [
+        "addressLine1",
+        "addressLine2",
+        "suburb",
+        "state",
+        "postcode",
+        "countryCode"
+      ],
+      "description": "Object with users address information",
+      "properties": {
+        "addressLine1": {
+          "type": "string"
+        },
+        "addressLine2": {
+          "type": "string"
+        },
+        "suburb": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "postcode": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "location": {
+          "type": "object",
+          "description": "Essentially latitude and logitude of user's address",
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "format": "double"
+            },
+            "longitude": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      }
+    },
+    "NeighbourReceiveLookup": {
+      "type": "object",
+      "description": "Returned as a result of scanning the first item of a TMD",
+      "properties": {
+        "deliveryId": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "correlationID": {
+          "type": "string"
+        },
+        "articles": {
+          "type": "array",
+          "items": {
+            "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+            "properties": {
+              "articleId": {
+                "type": "string"
+              },
+              "trackingNumber": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "alternateRecipient": {
+          "type": "object",
+          "description": "An object corrosponding to a users 'account'",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "emailAddress": {
+              "type": "string"
+            },
+            "fullName": {
+              "type": "string"
+            },
+            "travelTimeText": {
+              "type": "string"
+            },
+            "travelTimeValue": {
+              "type": "integer"
+            },
+            "accountAddress": {
+              "type": "object",
+              "required": [
+                "addressLine1",
+                "addressLine2",
+                "suburb",
+                "state",
+                "postcode",
+                "countryCode"
+              ],
+              "description": "Object with users address information",
+              "properties": {
+                "addressLine1": {
+                  "type": "string"
+                },
+                "addressLine2": {
+                  "type": "string"
+                },
+                "suburb": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "postcode": {
+                  "type": "string"
+                },
+                "phoneNumber": {
+                  "type": "string"
+                },
+                "countryCode": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "object",
+                  "description": "Essentially latitude and logitude of user's address",
+                  "properties": {
+                    "latitude": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "format": "double"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Account": {
+      "type": "object",
+      "description": "An object corrosponding to a users 'account'",
+      "properties": {
+        "emailAddress": {
+          "type": "string"
+        },
+        "emailVerified": {
+          "type": "boolean"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "accountAddress": {
+          "type": "object",
+          "required": [
+            "addressLine1",
+            "addressLine2",
+            "suburb",
+            "state",
+            "postcode",
+            "countryCode"
+          ],
+          "description": "Object with users address information",
+          "properties": {
+            "addressLine1": {
+              "type": "string"
+            },
+            "addressLine2": {
+              "type": "string"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "location": {
+              "type": "object",
+              "description": "Essentially latitude and logitude of user's address",
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "longitude": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        },
+        "installationInformation": {
+          "description": "A collection of information that describes an instance of the application and what device it is running on.",
+          "properties": {
+            "OSType": {
+              "type": "string",
+              "description": "Android or Apple or other"
+            },
+            "OSMajorVersion": {
+              "type": "string",
+              "description": "The major version of the mobile OS"
+            },
+            "OSMinorVersion": {
+              "type": "string",
+              "description": "the minor version of the mobile OS"
+            },
+            "DeviceIdentifier": {
+              "type": "string",
+              "description": "the device ID of the mobile device"
+            },
+            "ApplicationVersion": {
+              "type": "string",
+              "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+            }
+          }
+        },
+        "userPreferences": {
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "RecipientDetails": {
+      "type": "object",
+      "required": [
+        "fullName"
+      ],
+      "description": "When a \"neighbour\" hands over articles to \"recipient\", if user is unknown to TrustMile, neighbour shall provide email address.",
+      "properties": {
+        "emailAddress": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "object",
+          "required": [
+            "addressLine1",
+            "addressLine2",
+            "suburb",
+            "state",
+            "postcode",
+            "countryCode"
+          ],
+          "description": "Object with users address information",
+          "properties": {
+            "addressLine1": {
+              "type": "string"
+            },
+            "addressLine2": {
+              "type": "string"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "location": {
+              "type": "object",
+              "description": "Essentially latitude and logitude of user's address",
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "longitude": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "NeighbourReceive": {
+      "type": "object",
+      "description": "List of articles for the neighbour receive post operation",
+      "properties": {
+        "articles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AddDelivery": {
+      "type": "object",
+      "required": [
+        "courierSlug",
+        "trackingNumber",
+        "description"
+      ],
+      "description": "The tracking number and courier slug for a given parcel required to be added to the user's account",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "courierSlug": {
+          "type": "string"
+        },
+        "trackingNumber": {
+          "type": "string"
+        }
+      }
+    },
+    "AccountRegister": {
+      "required": [
+        "emailAddress",
+        "password"
+      ],
+      "description": "Content required for registering an account",
+      "properties": {
+        "emailAddress": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "installationInformation": {
+          "description": "A collection of information that describes an instance of the application and what device it is running on.",
+          "properties": {
+            "OSType": {
+              "type": "string",
+              "description": "Android or Apple or other"
+            },
+            "OSMajorVersion": {
+              "type": "string",
+              "description": "The major version of the mobile OS"
+            },
+            "OSMinorVersion": {
+              "type": "string",
+              "description": "the minor version of the mobile OS"
+            },
+            "DeviceIdentifier": {
+              "type": "string",
+              "description": "the device ID of the mobile device"
+            },
+            "ApplicationVersion": {
+              "type": "string",
+              "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+            }
+          }
+        },
+        "accountAddress": {
+          "type": "object",
+          "required": [
+            "addressLine1",
+            "addressLine2",
+            "suburb",
+            "state",
+            "postcode",
+            "countryCode"
+          ],
+          "description": "Object with users address information",
+          "properties": {
+            "addressLine1": {
+              "type": "string"
+            },
+            "addressLine2": {
+              "type": "string"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "location": {
+              "type": "object",
+              "description": "Essentially latitude and logitude of user's address",
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "longitude": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DeliveryInfo": {
+      "type": "object",
+      "description": "A single summary of delivery info",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "trackingNumber": {
+          "type": "string"
+        },
+        "courierName": {
+          "type": "string"
+        },
+        "courierPhone": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string"
+        },
+        "courierWeb": {
+          "type": "string"
+        },
+        "latestStatus": {
+          "type": "string"
+        },
+        "displayStatus": {
+          "type": "string"
+        },
+        "isDelivered": {
+          "type": "boolean"
+        },
+        "isNeighbour": {
+          "type": "boolean"
+        },
+        "cardNumber": {
+          "type": "string"
+        },
+        "feedbackLeft": {
+          "type": "boolean"
+        },
+        "deliveryId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "trackingEvents": {
+          "type": "array",
+          "items": {
+            "description": "reperesents 1 tracking event for a delivery",
+            "properties": {
+              "isTrustMileEvent": {
+                "description": "true means this is a trustmile event, false means this is a courier event",
+                "type": "boolean"
+              },
+              "tag": {
+                "description": "a code to describe this event, for courier events the tag will be the AfterShip tag.  For trustmile events the set of tages has not yet been determined",
+                "type": "string"
+              },
+              "message": {
+                "description": "a free-form text description of the event",
+                "type": "string"
+              },
+              "slug": {
+                "description": "tracking slug",
+                "type": "string"
+              },
+              "tacking_number": {
+                "type": "string"
+              },
+              "checkpoint_time": {
+                "type": "string",
+                "format": "datetime"
+              },
+              "location": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TrustMileDeliveryInfo": {
+      "type": "object",
+      "description": "Detail info about a trustmile delivery",
+      "properties": {
+        "articles": {
+          "type": "array",
+          "items": {
+            "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+            "properties": {
+              "articleId": {
+                "type": "string"
+              },
+              "trackingNumber": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "recipientName": {
+          "type": "string"
+        },
+        "secretWord": {
+          "type": "string"
+        }
+      }
+    },
+    "article": {
+      "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+      "properties": {
+        "articleId": {
+          "type": "string"
+        },
+        "trackingNumber": {
+          "type": "string"
+        }
+      }
+    },
+    "Courier": {
+      "description": "A courier company",
+      "properties": {
+        "courierId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "TrackingInformation": {
+      "description": "reperesents 1 tracking event for a delivery",
+      "properties": {
+        "isTrustMileEvent": {
+          "description": "true means this is a trustmile event, false means this is a courier event",
+          "type": "boolean"
+        },
+        "tag": {
+          "description": "a code to describe this event, for courier events the tag will be the AfterShip tag.  For trustmile events the set of tages has not yet been determined",
+          "type": "string"
+        },
+        "message": {
+          "description": "a free-form text description of the event",
+          "type": "string"
+        },
+        "slug": {
+          "description": "tracking slug",
+          "type": "string"
+        },
+        "tacking_number": {
+          "type": "string"
+        },
+        "checkpoint_time": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "location": {
+          "type": "string"
+        }
+      }
+    },
+    "KeyValuePair": {
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "Dictionary": {
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "InstallationInformation": {
+      "description": "A collection of information that describes an instance of the application and what device it is running on.",
+      "properties": {
+        "OSType": {
+          "type": "string",
+          "description": "Android or Apple or other"
+        },
+        "OSMajorVersion": {
+          "type": "string",
+          "description": "The major version of the mobile OS"
+        },
+        "OSMinorVersion": {
+          "type": "string",
+          "description": "the minor version of the mobile OS"
+        },
+        "DeviceIdentifier": {
+          "type": "string",
+          "description": "the device ID of the mobile device"
+        },
+        "ApplicationVersion": {
+          "type": "string",
+          "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+        }
+      }
+    },
+    "ApplicationSettings": {
+      "description": "a set of properties used to enable & disable features on the client",
+      "properties": {
+        "showMessages": {
+          "description": "show/hide the messages icon (no messages until ready for neighbour collections)",
+          "type": "boolean"
+        },
+        "offerNeighbourSignupInMenu": {
+          "description": "yes/no to offer neighbour signup in the SETTINGS menu",
+          "type": "boolean"
+        },
+        "promptForNeighbourSignup": {
+          "description": "yes/no to show a neighbour signup prompt on My Deliveries",
+          "type": "boolean"
+        },
+        "isTrustMileNeighbour": {
+          "description": "yes/no that this user has given permission to receive deliveries on behalf of others",
+          "type": "boolean"
+        },
+        "heartbeat": {
+          "description": "0 (off) or greater, being the number of minutes between sending heartbeats to the server",
+          "type": "integer"
+        },
+        "trustMileFeedback": {
+          "description": "show / hide capture of feedback for TrustMile on feedback screen",
+          "type": "boolean"
+        }
+      }
+    },
+    "Conversation": {
+      "description": "represents a single conversation.  A conversation may or may not be tied to a delivery.  It is also possible to have a conversation that has not yet started - the messages tab will show a list of conversation AND neighbour pickups that the user can create a conversation againt, in this situation the conversationId will be null",
+      "properties": {
+        "conversationId": {
+          "description": "The conversationId of the conversation.  This value can be null in cases where the user has the ability to start a conversation but no conversation has been started.  A conversationId can exist with 0 messages in the conversation.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "unreadMessage": {
+          "description": "the number of messagesd in the conversation the user has not read",
+          "type": "integer"
+        },
+        "totalMessages": {
+          "description": "the total number of messages in the conversation",
+          "type": "integer"
+        },
+        "deliveryId": {
+          "description": "If this message relates to a , the ID of the delivery.  Null indicates a  system message",
+          "type": "string",
+          "format": "uuid"
+        },
+        "deliveriestate": {
+          "description": "the collection state of the pickup (delivery).  one of 'ready to pickup', 'collected awaiting feedback', 'collected, closed'",
+          "type": "string"
+        },
+        "neighbourName": {
+          "description": "the name of the neighbour",
+          "type": "string"
+        },
+        "neighbourAddress": {
+          "description": "the pickup address of the neighbour",
+          "type": "string"
+        },
+        "systemMessageTitle": {
+          "description": "when this is a system message, this is the title to display on the conversations screen"
+        }
+      }
+    },
+    "Message": {
+      "description": "a single message in a conversation",
+      "properties": {
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequenceNumber": {
+          "description": "the order of this message in this conversation",
+          "type": "integer"
+        },
+        "isUnread": {
+          "description": "has the user read this message or not.",
+          "type": "boolean"
+        },
+        "from": {
+          "description": "text description of the person who wrote this message.",
+          "type": "string"
+        },
+        "isFromMe": {
+          "description": "was this message sent but the requesting user",
+          "type": "boolean"
+        },
+        "messageContent": {
+          "description": "the content of the message",
+          "type": "string"
+        }
+      }
+    },
+    "FeedbackMessage": {
+      "description": "the content of a feedback post",
+      "properties": {
+        "consumerName": {
+          "type": "string"
+        },
+        "consumerEmail": {
+          "type": "string"
+        },
+        "feedbackMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "Login": {
+      "description": "Required data for  login",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "The username to login with"
+        },
+        "password": {
+          "type": "string",
+          "description": "The password associated with the username"
+        },
+        "installationInformation": {
+          "description": "A collection of information that describes an instance of the application and what device it is running on.",
+          "properties": {
+            "OSType": {
+              "type": "string",
+              "description": "Android or Apple or other"
+            },
+            "OSMajorVersion": {
+              "type": "string",
+              "description": "The major version of the mobile OS"
+            },
+            "OSMinorVersion": {
+              "type": "string",
+              "description": "the minor version of the mobile OS"
+            },
+            "DeviceIdentifier": {
+              "type": "string",
+              "description": "the device ID of the mobile device"
+            },
+            "ApplicationVersion": {
+              "type": "string",
+              "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+            }
+          }
+        }
+      }
+    },
+    "GeoLocation": {
+      "description": "Essentially latitude and logitude of user's address",
+      "type": "object",
+      "required": [
+        "latitude",
+        "longitude"
+      ],
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Delivery": {
+      "type": "object",
+      "required": [
+        "articles"
+      ],
+      "properties": {
+        "deliveryId": {
+          "type": "string"
+        },
+        "articles": {
+          "type": "array",
+          "items": {
+            "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+            "properties": {
+              "articleId": {
+                "type": "string"
+              },
+              "trackingNumber": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "neighbour": {
+          "type": "object",
+          "description": "An object corrosponding to a users 'account'",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "emailAddress": {
+              "type": "string"
+            },
+            "fullName": {
+              "type": "string"
+            },
+            "travelTimeText": {
+              "type": "string"
+            },
+            "travelTimeValue": {
+              "type": "integer"
+            },
+            "accountAddress": {
+              "type": "object",
+              "required": [
+                "addressLine1",
+                "addressLine2",
+                "suburb",
+                "state",
+                "postcode",
+                "countryCode"
+              ],
+              "description": "Object with users address information",
+              "properties": {
+                "addressLine1": {
+                  "type": "string"
+                },
+                "addressLine2": {
+                  "type": "string"
+                },
+                "suburb": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "postcode": {
+                  "type": "string"
+                },
+                "phoneNumber": {
+                  "type": "string"
+                },
+                "countryCode": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "object",
+                  "description": "Essentially latitude and logitude of user's address",
+                  "properties": {
+                    "latitude": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "format": "double"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "recipientInfo": {
+          "type": "object",
+          "properties": {
+            "fullName": {
+              "type": "string"
+            },
+            "emailAddress": {
+              "type": "string",
+              "format": "email"
+            },
+            "phoneNumber": {
+              "type": "string"
+            }
+          }
+        },
+        "state": {
+          "type": "string"
+        },
+        "lastUpdated": {
+          "type": "dateTime"
+        }
+      }
+    },
+    "CreateDelivery": {
+      "type": "object",
+      "required": [
+        "articles",
+        "neighbourId"
+      ],
+      "properties": {
+        "articles": {
+          "type": "array",
+          "items": {
+            "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+            "properties": {
+              "articleId": {
+                "type": "string"
+              },
+              "trackingNumber": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "neighbourId": {
+          "type": "string"
+        },
+        "location": {
+          "description": "Essentially latitude and logitude of user's address",
+          "type": "object",
+          "required": [
+            "latitude",
+            "longitude"
+          ],
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "format": "double"
+            },
+            "longitude": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      }
+    },
+    "RecipientInfo": {
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string"
+        }
+      }
+    },
+    "alternateRecipient": {
+      "properties": {
+        "consumerId": {
+          "type": "string",
+          "description": "the Id of the alternate recipient"
+        },
+        "email": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "physicalAddress": {
+          "properties": {
+            "latitude": {
+              "description": "the latitude of the recipient",
+              "type": "number",
+              "format": "double"
+            },
+            "longitude": {
+              "description": "the longitude of the recipient",
+              "type": "number",
+              "format": "double"
+            },
+            "unitNumber": {
+              "type": "string"
+            },
+            "streetNumber": {
+              "type": "string"
+            },
+            "streetName": {
+              "type": "string"
+            },
+            "streetType": {
+              "type": "string"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string",
+              "pattern": "^[0-9]{4}$"
+            }
+          }
+        }
+      },
+      "required": [
+        "consumerId"
+      ]
+    },
+    "UserInfo": {
+      "type": "object",
+      "description": "An object corrosponding to a users 'account'",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "travelTimeText": {
+          "type": "string"
+        },
+        "travelTimeValue": {
+          "type": "integer"
+        },
+        "accountAddress": {
+          "type": "object",
+          "required": [
+            "addressLine1",
+            "addressLine2",
+            "suburb",
+            "state",
+            "postcode",
+            "countryCode"
+          ],
+          "description": "Object with users address information",
+          "properties": {
+            "addressLine1": {
+              "type": "string"
+            },
+            "addressLine2": {
+              "type": "string"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "location": {
+              "type": "object",
+              "description": "Essentially latitude and logitude of user's address",
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "longitude": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Retailer": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "contactNumber": {
+          "type": "string"
+        }
+      }
+    },
+    "DelegateDelivery": {
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "deliveryId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  }
+}

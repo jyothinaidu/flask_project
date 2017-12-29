@@ -1,0 +1,1318 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.1.0"
+  title: Trust Mile Consumer Application
+
+  description: |
+    Describes the API for the Consumer App
+    
+    ## correlationID
+      This parameter is returned with every request.
+      
+      The intent is that the server side will generate a unique id for each request, and feature this ID in all logging that occurs.  This will allow us to very easily to resolve issues faced consumers of the API.  When questioned with 'Why didn't this work' or 'This isn't working correctly' - we can identify the request server-side and easily identify events on the server associated with that request.
+      
+      My intent is to generate a log/trace of every request
+      
+    ## Deliveries
+      'What is a delivery' is still a little undecided in the server-side data model.  If we do use parse.com then the exising ER diagram becomes obsoltete and we will switch to a documnent model to describe the data.
+      
+      As such details are in flux so I've skipped over heavily defining return times in some places.
+  
+  
+  
+host: api.trustmile.com
+
+schemes:
+  - https
+  
+basePath: /consumer/v1
+# Describe your paths here
+
+produces:
+  - application/json
+  
+consumes:
+  - application/json
+
+  
+securityDefinitions:
+  internalApiKey:
+    type: apiKey
+    in: header
+    name: X-consumer-apiKey
+    
+
+    
+paths:
+  /account/login:
+    post: 
+      description: |
+        ## __Service: Login__
+        Logs a user in to their account and returns the API key to be used in subsequent requests.  Returns the status of the users email verification via the 'account' object
+      parameters:
+        - name: LoginRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              emailAddress:
+                type: string
+                description: The emailAddress to login with
+              password:
+                type: string
+                description: The password associated with the username
+              installiationInformation:
+                $ref: '#/definitions/InstalliationInformation'
+      responses:
+        200:
+          description: the login was sucessful.  The users 'account' is returned so that the 'email verified' status can be determineed
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid
+              account:
+                $ref: '#/definitions/Account'
+              
+        403:
+          description: username or password incorrect
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/register:
+    post:
+      description: |
+        ## Service: Signup
+      
+        Creates a new user account and logs in the user. Returns an apiKey to be used in subsequent requests.
+        
+        After signup the user will be unable to proceed until their email address is verified.  The users device information is caputired at this stage.
+      
+      parameters:
+        - name: RegisterRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              emailAddress: 
+                type: string
+                format: email
+              password:
+                type: string
+              installiationInformation:
+                $ref: '#/definitions/InstalliationInformation'
+      responses:
+        200:
+          description: account created
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid                
+        409:
+          description: username already exists
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the username was not an email address or the password failed complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+  
+  /account/forgotPassword:
+    post:
+      description: |
+        ## Service: Forgot Password
+        
+        Triggers an reset password email to be sent to the supplied email address.
+      parameters:
+        - name: ForgotPasswordRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              emailAddress:
+                type: string
+                format: email
+      responses:
+        200:
+          description: a reset password link was sent to the email address
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the email address was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+  
+  /account/verifyEmail:
+    put:
+      description: |
+        ## Service: Resend Email
+      
+        resends the 'email verification' email.  The email address is found based on the supplied apiKey
+        
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: email was sent
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: the email address is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+  /account:
+    get:
+      description: |
+        ## Service: Check Signup, Get Account.
+        
+        Returs the users account, including if the email addres has been verified.
+        
+      security:
+        - internalApiKey: []
+
+      responses:
+        200:
+          description: the status of an account
+          schema:
+            properties:
+              correlationID:
+                type: string
+              account:
+                $ref: '#/definitions/Account'
+        401:
+          $ref: '#/definitions/401'  
+    put:
+      description: |
+        ## Service: Save Details
+        
+        Sets a users name and home address.
+        
+        The client must make a call to Googles Geo-Location API to retrieve the lattitude & loggitude for the entrered address.  This must be performed on the client and not the server due to Google throttling limits.
+        
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: UpdateAccountRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              fullName:
+                type: string
+              address:
+                type: string
+              suburb:
+                type: string
+              state:
+                type: string
+              postcode:
+                type: string
+              countryCode:
+                type: string
+              latitude:
+                description: the latitude of the recipient
+                type: number
+                format: double
+              longitude: 
+                description: the longitude of the recipient
+                type: number
+                format: double              
+      responses:
+        200:
+          description: the details were saved
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: verification failed.  Missing field, etc
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    delete:
+      description: | 
+        ## Service: Reset Signup
+        
+        Allows a user to delete their account.  Currently only supported when the email address has not been verified.
+        
+        The account to delete is based on the apiKey.  After this call the apiKey is invalidated.
+        
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: the account was deleted
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: the email address on the account is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+          
+  /account/password:
+    post:
+      description: |
+        ## Service: Set Login
+      
+        Allows a user to change their password.
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: UpdateAccountRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              password:
+                type: string
+              newPassword:
+                type: string
+      responses:
+        200:
+          description: the password was changed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: the supplied current password did not match the users current password
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the new password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  
+#deliveries
+  /deliveries/findDelivery/{trackingNumber}:
+    parameters:
+      - name: trackingNumber
+        in: path
+        type: string
+    get:
+      description: |
+        ##Service: Find Delivery (find courier = true, ready for pickup = false )
+      
+        Finds a 'courier delivery' so that it can be added to the users account.  This does not return deliverys that can be picked up from a neighbour.  This does not return deliveries where we have existing tracking information and that tracking information indicates the delivery is complete.
+        
+        The trackingNumber may be either a consignment number or an article number.
+        
+        The returned data is a mix of
+         - the delivery ID of a delivery already in the system
+         - a list of couriers, so that the user may create a new tracking.
+         
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of possible deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliveries:
+                type: array
+                items:
+                  $ref: '#/definitions/Delivery'
+              couriers:
+                type: array
+                items:
+                  $ref: '#/definitions/Courier'
+        404:
+          description: the tracking number was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /deliveries/findCard/{trackingNumber}:
+    parameters:
+      - name: trackingNumber
+        in: path
+        type: string
+    get:
+      description: |
+        ##Service: Find Delivery (find courier = false, ready for pickup = true )
+        
+        Finds a delivery that is at a neighbours house & ready to pickup.
+        
+        The trackingNumber must be an articleId as listed on the delivery card in their letter box.
+        
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of possible deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+              cards:
+                type: array
+                items:
+                  $ref: '#/definitions/Card'
+              
+        404:
+          description: the tracking number was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /deliveries:
+    post:
+      description: |
+        ##Service: Add Delivery
+        
+        Adds a delivery to the users delivery list. required is one of:
+        - deliveryId
+        - cardId
+        - trackingNumber + Courier
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: AddDeliveryRequest
+          in: body
+          schema:
+            properties:
+              deliveryId:
+                type: string
+              cardId:
+                type: string
+              trackingNumber:
+                type: string
+              courierSlug:
+                type: string
+
+      responses:
+        200:
+          description: the delivery was added
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the delivery was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        400:
+          description: A required field was not supplied
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+          
+    get:
+      description: |
+        ## Service: Get Deliveries
+        
+        Retrieves a list of the users deliveries.
+        
+        Returns a list of *Delivery* objects that should not yet be relegated to History. Some of which are *CourierDelivery*s and others are *NeighbourDelivery*s. Included in the list are all:
+        - open *Delivery*s
+        - closed *Delivery*s with unread messages
+        - closed *Delivery*s that were closed within the last 3 days, or last had a newly read message in the past 3 days
+         
+        Note that *Delivery*s in a state of "Picked Up - Leave Feedback" are returned as "Closed" to all users that are not the Owner of the *Delivery* 
+         
+        The sort order is:
+        - Open *NeighbourDelivery*s where I am the neighbour
+        - Open *NeighbourDelivery*s where I need to pickup
+        - Open *CourierDelivery*s
+        - Closed *NeighbourDelivery*s with unread *Message*s
+        - Closed *NeighbourDelivery*s and *CourierDelivery*s sorted by closed date        
+        
+        Retrieves an object describing application settings to apply to this users application installiation, this object is 'piggey backed' on this call
+        
+        The *ApplicationSettings* object includes:
+        - *ShowMessages* : show/hide the messages icon (no messages until ready for neighbour collections)
+        - *OfferNeighbourSignupInMenu* : yes/no to offer neighbour signup in the SETTINGS menu
+        - *PromptForNeighbourSignup* : yes/no to show a neighbour signup prompt on My Deliveries
+        - *IsTrustMileNeighbour* : yes/no that this user has given permission to receive deliveries on behalf of others
+        - *Heartbeat* : 0 (off) or greater, being the number of minutes between sending heartbeats to the server
+        - *TrustMileFeedback* : show / hide capture of feedback for TrustMile on feedback screen 
+        
+        
+        Retrieves the number of unread messages for the user.
+      responses:
+        200:
+          description: the list of deliveries, may be empty
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliveries:
+                type: array
+                items:
+                  $ref: '#/definitions/Delivery'
+              unreadMessages:
+                type: number
+                format: integer
+              applicationSettings:
+                $ref: '#/definitions/ApplicationSettings'
+            
+        401:
+          $ref: '#/definitions/401'  
+    
+  /deliveries/{deliveryId}/tracking:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string    
+    get:
+      description: |
+        ##Service: Get Tracking
+        
+        Retereives the tracking information for a delivery.  The tracking information can be a mix of Courier and TrustMile tracking events.  THe events are returned in their correct order.
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: an ordered list of tracking evets
+          schema:
+            properties:
+              correlationID:
+                type: string
+              trackingEvents:
+                type: array
+                items:
+                  $ref: '#/definitions/TrackingInformation'
+        404:
+          description: the deliveryId was not found, or the user dfoes not have permission to view the tracking for this deliveryId
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /conversations:
+    get:
+      description: |
+        ## Service: Get Conversations
+        
+        Reterives a list of conversations for this user.  The exact format of the response has not yet been determined.
+        The conversations are returned in the order to display to the user.
+        
+        
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of conversations, ordered in display order.  this may be empty
+          schema:
+            properties:
+              correlationID:
+                type: string
+              conversations:
+                type: array
+                items:
+                  $ref: '#/definitions/Conversation'
+        401:
+          $ref: '#/definitions/401'  
+    post:
+      description: |
+        ## service: none
+        
+        Starts a new conversation
+        
+        _Is this needed?  The screenshots implies that a conversation implicitly exists for every neighbour delivery.
+          I think this may be needed as there can be 2 conversations for the one delivery, each with different participents based on their 'owner' status of the parcel
+          
+          It probably is needed as if it wan't our DB would fill up with empty conversations_
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: delivery
+          in: body
+          schema:
+            properties:
+              cardId:
+                type: string
+                
+      responses:
+        200:
+          description: a new conversation was created OR there is already a conversation for this deliveryId that the user can participate in.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              conversationId:
+                type: string
+                format: uuid
+        403:
+          description: the user is not authorised to create a conversation for this deliveryId
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the deliveryId is empty, not found.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /conversations/{conversationId}:  
+    parameters:
+      - name: conversationId
+        in: path
+        type: string    
+    get:
+      description: |
+        ## Service: Get Messages
+        
+        retereives an array of all the messages in this conversation.  This will also mark the messages as being read by  the recipient.
+        
+        _Do we need to support functionality like 'get messages since time x', 'get new messages' - things that prevent large data transfers for long conversations_
+      responses:
+        200:
+          description: the messages
+          schema:
+            properties:
+              correlationID:
+                type: string
+              messages:
+                type: array
+                items:
+                  $ref: '#/definitions/Message'
+        404:
+          description: the conversationId was not foun
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    post:
+      description: sends a message on the conversation
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: SendMessageRequest
+          in: body
+          required: true
+          schema:
+            properties:
+              message:
+                type: string
+      responses:
+        200:
+          description: the message was sent 
+          schema:
+            properties:
+              correlationID:
+                type: string
+              messages:
+                description: an updated list of messages, this value is piggybaced onto this call.
+                type: array
+                items:
+                  $ref: '#/definitions/Message'                
+        400:
+          description: the message has not supplied any content
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the conversation was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /cards/neighbour/{cardId}:
+    parameters:
+      - name: cardId
+        in: path
+        type: string   
+    get:
+      description: |
+        ## Service: _none_ fufills the 'picking up' screen 
+        
+        Called by a recipient.  Returns a list of articles to be picked up from a neighobour for this card, and the state of the item
+        
+        _the return data will be determined once the backend schema has been agreed._
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of cards & articles articles and their state.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              articles:
+                description: a placeholder for the return data
+                type: string
+        403:
+          description: the user does not have any articles to pickup from this neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the cardId does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    
+  /cards/neighbour/{cardId}/feedback:
+    parameters:
+      - name: cardId
+        in: path
+        type: string   
+    post:
+      description: |
+        ## Service: Save Feedback
+        
+        Called by a recipient.  leaves feedback about their pickup experiance
+        
+        _feedback is left against a card.  Not a neighbour.  This is a little more fine-grained than leaving feedback against a neighbhour_
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: SendFeedbackRequest
+          in: body
+          schema:
+            properties:
+              neighbourRating:
+                type: number
+                format: integer
+                enum: [1,2,3,4,5]
+              neighbourComment:
+                type: string
+              trustMileRating:
+                type: number
+                format: integer
+                enum: [1,2,3,4,5]
+              trustMileComment:
+                type: string
+                
+      responses:
+        200:
+          description: the feedback was left
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: the user has not had any pickups from this neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the neighbourId does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the feedback did not match validation (field left black, etc)
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /cards/receiver/{cardId}:
+    parameters:
+      - name: cardId
+        in: path
+        type: string   
+    get:
+      description: |
+        ## Service: None.  Displayed the 'Parcel Handover' screen
+        
+        Called by a neighbour.  returns all the articles to be picked up on this card.
+        
+        _return data dependant on final schema design_
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of cards and their articles
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    put:
+      description:  |
+        ## Service: Start Pickup
+        
+        Used by the neighbour to set the ID credentials for a receiver.  This also signles that this card is in the process of being collected.
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: SetReceiverIDRequest
+          in: body
+          schema:
+            properties:
+              receiverName:
+                type: string
+              
+      responses:
+        200:
+          description: the ID was set sucessfully
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: The the card has been picked up.  Modifications not allowed
+        401:
+          $ref: '#/definitions/401'  
+
+  /cards/receiver/{cardId}/articles:
+    parameters:
+      - name: cardId
+        in: path
+        type: string   
+    post:
+      description: |
+        ##Service: Do Pickup
+        
+        Used by a neighbour to 'hand off' an article to a receiver.
+        The articles on the card and theiry state are returned from this request to 'picky back' off the request.
+
+        _return data dependant on final schema design_
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: HandoffArticleRequest
+          in: body
+          schema:
+            properties:
+              articleID:
+                type: string
+      responses:
+        200:
+          description:  sucessful.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: the article does not belong to the receiver
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the article has already been marked as handed over
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    delete:
+      description: |
+        ##Service: Cancel Pickup
+        
+        cancels a handoff
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description:  sucessful.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the handoff has completed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    put:
+      description:  |
+        ## Service: Close Pickup
+        
+        Used to confirm that a handoff has completed
+      security:
+        - internalApiKey: []
+      responses:
+        200: 
+          description: success
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: there are more articles to hand over to the receiver
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the card is alreacy closed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+          
+  /cards/courier/article/{trackingNumber}:
+    parameters:
+      - name: trackingNumber
+        in: path
+        type: string
+    get:
+      description: |
+        ## Service: None.  
+        
+        Finds the cardId associated with a scanned in trackingNumber.
+        This should be called the first time an article is scanned in, to retereive the card the courier is handing over.
+        - ensures one card is handed over at a time
+      responses:
+        200: 
+          description: success
+          schema:
+            properties:
+              correlationID:
+                type: string
+              cardId:
+                type: string
+                format: uuid
+        403:
+          description: The card the article is for is fglagged as belonging to a different trusted neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: The article is not associated with any card
+          schema:
+            properties:
+              correlationID:
+                type: string
+                
+  /cards/courier/card/{cardId}:
+    parameters:
+      - name: cardId
+        in: path
+        type: string
+    get:
+      description: |
+        ## Service: None
+        
+        returns all the articles associated with this card and their state
+      responses:
+        200:
+          description: a list of articles associated with this card
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The cardId specified is not for this trusted neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+    post:
+      description: |
+        ## Service: Do Handover
+        
+        called when a neighbour is receiving a parcel from a courier
+        
+        This call aslo returns all atricles on the card and theur state, piggybacking off this request.
+        
+        _return data dependant on final schema design_
+      parameters:
+        - name: HandoverArticleRequest
+          in: body
+          schema:
+            properties:
+              trackingNumber:
+                type: string
+      responses:
+        200:
+          description: the article was sucessfully handed over
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The cardId specified is not for this trusted neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+          
+        409:
+          description: The article is not for the cardId specified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+          
+    put: 
+      description: |
+        ## Service: Complete Handover
+        
+        Signals that the handover is complete
+        
+      responses:
+        200:
+          description: The card has been sucessfulley marked as handed over.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The cardId specified is not for this trusted neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+          
+        409:
+          description: Not all articles on this card have been handed over.  The card can not be marked as handed over.
+          schema:
+            properties:
+              correlationID:
+                type: string
+    delete:
+      description: |
+        ## Service: Cancel Handover
+        
+        Cancels the handover.  Marks all articles associated with the card as un-received.        
+      responses:
+        200:
+          description: The handover was sucessfull
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The cardId specified is not for this trusted neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+          
+        409:
+          description: The card has already been marked as handed over.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        
+          
+        
+        
+        
+  
+        
+      
+definitions:
+
+  401:
+    description: Not authorized.  Either the authorization key was missing or not present
+    properties:
+      correlationID:
+        type: string
+      reason:
+        type: string
+        enum: 
+            [ 'Authorization key invalid', 'X-consumer-apiKey header not present']  
+  
+  Account:
+    description: An object corrosponding to a users 'account'
+    properties:
+      emailVerified:
+        type: boolean
+      fullName:
+        type: string
+      address:
+        type: string
+      suburb:
+        type: string
+      state:
+        type: string
+      postcode:
+        type: string
+      countryCode:
+        type: string
+      latitude:
+        description: the latitude of the recipient
+        type: number
+        format: double
+      longitude: 
+        description: the longitude of the recipient
+        type: number
+        format: double              
+
+          
+  Delivery:
+    description: A single delivery withing the trustmile system
+    properties:
+      deliveryId:
+        type: string
+        format: uuid
+
+  Courier:
+    description: A courier company
+    properties:
+      courierId:
+        type: string
+        format: uuid
+      name:
+        type: string
+        
+  Card:
+    description: An object reperesenting a delivery where the recipient has been carded and items left at a neigbhours house.
+    properties:
+      cardId:
+        type: string
+        format: uuid
+      deliveries:
+        type: array
+        items:
+          $ref: '#/definitions/Delivery'
+          
+  TrackingInformation:
+    description: reperesents 1 tracking event for a delivery
+    properties:
+      isTrustMileEvent:
+        description: true means this is a trustmile event, false means this is a courier event
+        type: boolean
+      tag:
+        description: a code to describe this event, for courier events the tag will be the AfterShip tag.  For trustmile events the set of tages has not yet been determined
+        type: string
+      message:
+        description: a free-form text description of the event
+        type: string
+        
+  InstalliationInformation:
+    description: A collection of information that describes an instance of the application and what device it is running on.
+    properties:
+      OSType:
+        type: string
+        description: 
+          Android or Apple
+      OSMajorVersion:
+        type: string
+        description: The major version of the mobile OS
+      OSMinorVersion:
+        type: string
+        description: the minor version of the mobile OS
+      DeviceIdentifier:
+        type: string
+        description: the device ID of the mobile device
+      ApplicationVersion:
+        type: string
+        description: the version of the application installed, such as 1  or 1.1 or 1.1.1   
+        
+  ApplicationSettings:
+    description: a set of properties used to enable & disable features on the client
+    properties:
+      showMessages:
+        description: show/hide the messages icon (no messages until ready for neighbour collections)
+        type: boolean
+      offerNeighbourSignupInMenu: 
+        description: yes/no to offer neighbour signup in the SETTINGS menu
+        type: boolean
+      promptForNeighbourSignup: 
+        description: yes/no to show a neighbour signup prompt on My Deliveries
+        type: boolean
+      isTrustMileNeighbour:
+        description: yes/no that this user has given permission to receive deliveries on behalf of others
+        type: boolean
+      heartbeat: 
+        description: 0 (off) or greater, being the number of minutes between sending heartbeats to the server
+        type: integer
+      trustMileFeedback:
+        description: show / hide capture of feedback for TrustMile on feedback screen
+        type: boolean
+  
+  Conversation:
+    description: represents a single conversation.  A conversation may or may not be tied to a delivery.  It is also possible to have a conversation that has not yet started - the messages tab will show a list of conversation AND neighbour pickups that the user can create a conversation againt, in this situation the conversationId will be null
+    properties:
+      conversationId:
+        description:  The conversationId of the conversation.  This value can be null in cases where the user has the ability to start a conversation but no conversation has been started.  A conversationId can exist with 0 messages in the conversation.
+        type: string
+        format: uuid
+      unreadMessage:
+        description: the number of messagesd in the conversation the user has not read
+        type: integer
+      totalMessages:
+        description: the total number of messages in the conversation
+        type: integer
+      cardId:
+        description: If this message relates to a card, the ID of the card.  Null indicates a  system message
+        type: string
+        format: uuid
+      cardState:
+        description: the collection state of the pickup (card).  one of 'ready to pickup', 'collected awaiting feedback', 'collected, closed'  
+        type: string
+      neighbourName:
+        description: the name of the neighbour 
+        type: string
+      neighbourAddress:
+        description: the pickup address of the neighbour
+        type: string
+      systemMessageTitle:
+        description: when this is a system message, this is the title to display on the conversations screen
+        
+  Message:
+    description: a single message in a conversation
+    properties:
+      messageId:
+        type: string
+        format: uuid
+      sequenceNumber:
+        description: the order of this message in this conversation
+        type: integer
+      isUnread:
+        description: has the user read this message or not.
+        type: boolean
+      from:
+        description: text description of the person who wrote this message.
+        type: string
+      isFromMe:
+        description: was this message sent but the requesting user
+        type: boolean
+      messageContent:
+        description: the content of the message
+        type: string
+        

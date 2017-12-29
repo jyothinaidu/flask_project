@@ -1,0 +1,5 @@
+1. Ensure that pip is installing my version of flask-sqlalchemy, maybe just a straight copy.
+2. Figure out database configurations.
+3. Regenerate the latest courier app & consumer app api
+4. Work on courier app.
+5. Have some fun.

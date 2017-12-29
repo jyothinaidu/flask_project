@@ -1,0 +1,671 @@
+{
+  "info": {
+    "version": "1.0",
+    "description": "Describes the API that allows administrative functions.\nPrimarily dsigned to be used to allow the .NET website server to communicate with the python API backend\n\n## correlationID\n  This parameter is returned with every request.\n\n  The intent is that the server side will generate a unique id for each request, and feature this ID in all logging that occurs.  This will allow us to very easily to resolve issues faced consumers of the API.  When questioned with 'Why didn't this work' or 'This isn't working correctly' - we can identify the request server-side and easily identify events on the server associated with that request.\n\n  My intent is to generate a log/trace of every request\n\n## security\n  Requests will be secured with the X-admin-apiKey.  This will be a fixed secret shared key.\n\n## logon / logoff / sessions\n  There will be no logon or log off operations\n",
+    "title": "Trust Mile Admin Interface"
+  },
+  "paths": {
+    "/retailers": {
+      "post": {
+        "description": "Adds a new retailer\n",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/Retailer"
+            },
+            "required": true,
+            "name": "Retailer",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "THe retailer was added",
+            "schema": {
+              "properties": {
+                "retailer": {
+                  "$ref": "#/definitions/Retailer"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A retailer already exists for that Umbraco ID",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "returns basic details of all the retailers in the system\n",
+        "responses": {
+          "200": {
+            "description": "an array of all the retailers",
+            "schema": {
+              "properties": {
+                "retailers": {
+                  "items": {
+                    "$ref": "#/definitions/Retailer"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/allNeighbourLocations": {
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "get all neighbour locations",
+        "consumes": [
+          "multipart/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "The neighbourSignup was added",
+            "schema": {
+              "$ref": "#/definitions/NeighbourLocations"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/seal/{seal_id}": {
+      "parameters": [
+        {
+          "required": true,
+          "type": "string",
+          "name": "seal_id",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "information  needed about a retailer to display the seal on a website",
+        "responses": {
+          "200": {
+            "description": "the seal information",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "seal_info": {
+                  "$ref": "#/definitions/SealInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "seal id not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/neighbourSignup": {
+      "post": {
+        "description": "Adds a new neighbourSignup\n",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/NeighbourSignup"
+            },
+            "required": true,
+            "name": "NeighbourSignup",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The neighbourSignup was added",
+            "schema": {
+              "properties": {
+                "retailer": {
+                  "$ref": "#/definitions/NeighbourSignup"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "returns all neighbour signups\n",
+        "responses": {
+          "200": {
+            "description": "an array of all the neighbourSignups",
+            "schema": {
+              "properties": {
+                "neighbourSignups": {
+                  "items": {
+                    "$ref": "#/definitions/NeighbourSignup"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/retailers/{umbraco_id}": {
+      "put": {
+        "description": "Updates the retailer.\nif 'partialUpdate' is specified as true, only the fields in the Retailer object suppiled are updated.\nfields that are null are skipped\n\nif 'partialUpdate' is false, the retailer is replaced in it's entirity with the Retailer provided\n",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/Retailer"
+            },
+            "required": true,
+            "name": "RetailerUpdateRequest",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The umbracoID in the suppiled retailer object does not match the umbracoID in the URL"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "required": true,
+          "type": "string",
+          "name": "umbraco_id",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "description": "Returns the retailer specified",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "properties": {
+                "retailer": {
+                  "$ref": "#/definitions/Retailer"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seal/{seal_id}/seal-audit": {
+      "parameters": [
+        {
+          "required": true,
+          "type": "string",
+          "name": "seal_id",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "information  needed about a retailer to display the seal popup.  Similar results as /account/seal-audit in the retailer api",
+        "responses": {
+          "200": {
+            "description": "seal audit answers",
+            "schema": {
+              "properties": {
+                "seal_enabled": {
+                  "type": "boolean"
+                },
+                "seal_audits": {
+                  "items": {
+                    "$ref": "#/definitions/RetailerSealAudit"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "seal id not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/promotion": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "Create a new promotion",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/CreatePromotion"
+            },
+            "required": true,
+            "name": "Promotion",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The neighbourSignup was added",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                },
+                "promotionId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Retailer not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "basePath": "/admin",
+  "securityDefinitions": {
+    "internalApiKey": {
+      "type": "apiKey",
+      "name": "X-admin-apiKey",
+      "in": "header"
+    }
+  },
+  "definitions": {
+    "CourierMapping": {
+      "type": "object",
+      "properties": {
+        "sourceText": {
+          "type": "string"
+        },
+        "courierName": {
+          "type": "string"
+        }
+      }
+    },
+    "PromotionImage": {
+      "type": "object",
+      "properties": {
+        "imageFileData": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "NeighbourLocation": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "string"
+        },
+        "lng": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "NeighbourSignup": {
+      "type": "object",
+      "properties": {
+        "hasIPhone": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "workStatus": {
+          "type": "string"
+        },
+        "over18": {
+          "type": "boolean"
+        },
+        "suburb": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "postcode": {
+          "type": "string"
+        },
+        "addressLine1": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "addressLine2": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreatePromotion": {
+      "type": "object",
+      "properties": {
+        "retailerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "promotionImages": {
+          "items": {
+            "$ref": "#/definitions/PromotionImage"
+          },
+          "type": "array"
+        },
+        "promotionDestinationUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "RetailerSealAudit": {
+      "type": "object",
+      "description": "Gets and sets seal audit information",
+      "properties": {
+        "answer": {
+          "type": "boolean"
+        },
+        "additional_information_approved": {
+          "type": "boolean"
+        },
+        "question_text": {
+          "type": "string"
+        },
+        "question_code": {
+          "type": "string"
+        },
+        "additional_information": {
+          "type": "string"
+        }
+      }
+    },
+    "Retailer": {
+      "type": "object",
+      "properties": {
+        "umbraco_id": {
+          "type": "string"
+        },
+        "courier_mappings": {
+          "items": {
+            "$ref": "#/definitions/CourierMapping"
+          },
+          "type": "array"
+        },
+        "email_integration_configuration": {
+          "$ref": "#/definitions/EmailIntegrationConfiguration"
+        },
+        "website_name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "website_url": {
+          "type": "string"
+        }
+      }
+    },
+    "EmailParser": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "#/definitions/EmailExtractor"
+        },
+        "repeat": {
+          "type": "boolean"
+        },
+        "stop": {
+          "$ref": "#/definitions/EmailExtractor"
+        },
+        "extractors": {
+          "items": {
+            "$ref": "#/definitions/EmailExtractor"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "401": {
+      "required": [
+        "correlationID"
+      ],
+      "type": "object",
+      "description": "Not authorized.  Either the authorization key was missing or not present",
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "correlationID": {
+          "type": "string"
+        }
+      }
+    },
+    "SealInfo": {
+      "type": "object",
+      "properties": {
+        "seal_enabled": {
+          "type": "boolean"
+        },
+        "website_name": {
+          "type": "string"
+        },
+        "website_url": {
+          "type": "string"
+        }
+      }
+    },
+    "EmailIntegrationConfiguration": {
+      "type": "object",
+      "properties": {
+        "from_email_addresses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parsing_set": {
+          "items": {
+            "$ref": "#/definitions/EmailParser"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "NeighbourLocations": {
+      "type": "object",
+      "properties": {
+        "userLocations": {
+          "items": {
+            "$ref": "#/definitions/NeighbourLocation"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "EmailExtractor": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "string"
+        },
+        "item": {
+          "type": "string"
+        },
+        "capture": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "swagger": "2.0",
+  "consumes": [
+    "application/json"
+  ]
+}

@@ -1,0 +1,18 @@
+Pusher Notes
+
+The normal case is a user attempts to start a conversation with a person who's name is on their card.
+
+They click a button to say "Start a conversation with Mary, it says she's received my package"
+
+The device sends an API request to our server saying "/conversation/ POST" with user details of other person.
+
+How this would integrate with Pusher is interesting.
+
+When they do the post we could submit a couple of triggers through to pusher:
+    1. create a new channel called mary_james_conversation_uniqueid
+    2. Notify another channel to which all devices are connected to say "new_event_mary_james_channel_created"
+       and the only people who care about his is mary and james. This could have an device id in the name,
+       and the device only subscribes to this new channel if it matches their device id.
+       On our backend, we need to provide for authentication via the /pusher/authenticate endpoint and that would need
+       lookup if the user who is subscribing to this new channel the initiator.
+

@@ -1,0 +1,1798 @@
+{
+  "info": {
+    "version": "0.1.1",
+    "title": "Trust Mile Courier Application"
+  },
+  "paths": {
+    "/nearestNeighbours/{latitude}/{longitude}": {
+      "parameters": [
+        {
+          "format": "double",
+          "required": true,
+          "type": "number",
+          "name": "latitude",
+          "in": "path"
+        },
+        {
+          "required": true,
+          "type": "number",
+          "name": "longitude",
+          "in": "path",
+          "format": "double"
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "Retrieves a list of alternate near the courier's location. ** works ** distance calculation needs work",
+        "responses": {
+          "200": {
+            "description": "alternate recipient response",
+            "schema": {
+              "properties": {
+                "alternateRecipients": {
+                  "items": {
+                    "$ref": "#/definitions/UserInfo"
+                  },
+                  "type": "array",
+                  "description": "an array of alternate recipients, ordered by proximity to the GPS coordinates stored against the delivery"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          },
+          "404": {
+            "description": "No neighbours found",
+            "schema": {
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "location"
+        ]
+      }
+    },
+    "/deliveries/{deliveryId}": {
+      "put": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "sets the state for this delivery. States are NEWLY_CREATED TRANSIT_TO_NEIGHBOUR NEIGHBOUR_RECEIVED RECIPIENT_RECEIVED ABORTING NEIGHBOUR_ABORTED COURIER_ABORTED CANCELLED RECIPIENT_ARCHIVED TIME_ARCHIVED ** works **",
+        "responses": {
+          "200": {
+            "description": "the state was set correctly",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "properties": {
+                "deliveryState": {
+                  "enum": [
+                    "NEWLY_CREATED",
+                    "TRANSIT_TO_NEIGHBOUR",
+                    "NEIGHBOUR_RECEIVED",
+                    "RECIPIENT_RECEIVED",
+                    "ABORTING",
+                    "NEIGHBOUR_ABORTED",
+                    "COURIER_ABORTED",
+                    "CANCELLED",
+                    "RECIPIENT_ARCHIVED",
+                    "TIME_ARCHIVED"
+                  ],
+                  "type": "string"
+                }
+              }
+            },
+            "required": true,
+            "name": "deliveryState",
+            "in": "body"
+          },
+          {
+            "schema": {
+              "properties": {
+                "neighbourId": {
+                  "type": "uuid"
+                }
+              }
+            },
+            "name": "neighbourId",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "deliveries"
+        ]
+      },
+      "delete": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "cancels the use of trust mile for this delivery",
+        "responses": {
+          "200": {
+            "description": "the delivery was cancelled",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "tags": [
+          "deliveries"
+        ]
+      },
+      "parameters": [
+        {
+          "format": "uuid",
+          "required": true,
+          "type": "string",
+          "name": "deliveryId",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "returns the delivery specified and associated articles ** works **",
+        "responses": {
+          "200": {
+            "description": "The delivery and associated parcels",
+            "schema": {
+              "properties": {
+                "delivery": {
+                  "$ref": "#/definitions/Delivery"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "deliveries"
+        ]
+      }
+    },
+    "/deliveries/{deliveryId}/articles/": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "adds an article to this delivery ** works **",
+        "responses": {
+          "200": {
+            "description": "The parcel was added",
+            "schema": {
+              "properties": {
+                "parcels": {
+                  "items": {
+                    "$ref": "#/definitions/article"
+                  },
+                  "type": "array",
+                  "description": "an array of articles that are in this delivery"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "a parcel with that tracking number and that item number already exists in an open delivery for this courier.",
+            "schema": {
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "The message to display to the user"
+                },
+                "parcels": {
+                  "items": {
+                    "$ref": "#/definitions/article"
+                  },
+                  "type": "array",
+                  "description": "an array of articles that are in this delivery"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "properties": {
+                "trackingNumber": {
+                  "type": "string",
+                  "description": "the tracking number scanned in from a barcode or typed in."
+                }
+              }
+            },
+            "required": true,
+            "description": "the description",
+            "name": "article",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "deliveries"
+        ]
+      },
+      "parameters": [
+        {
+          "format": "uuid",
+          "required": true,
+          "type": "string",
+          "name": "deliveryId",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "returns a list of articles associated with this delivery ** works **",
+        "responses": {
+          "200": {
+            "description": "a list of articles associated with this delivery",
+            "schema": {
+              "properties": {
+                "parcels": {
+                  "items": {
+                    "$ref": "#/definitions/article"
+                  },
+                  "type": "array",
+                  "description": "an array of articles that are in this delivery"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "tags": [
+          "deliveries"
+        ]
+      }
+    },
+    "/logout": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "used to log out ** works **",
+        "responses": {
+          "200": {
+            "description": "User was logged out",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/login": {
+      "post": {
+        "description": "## __Service: Login__\n** works ** \nLogs a courier in to their account and returns the API key to be used in subsequent requests.  Returns the status of the users email verification via the 'account' object\n",
+        "responses": {
+          "200": {
+            "description": "the login was sucessful.  The courier's 'account'",
+            "schema": {
+              "properties": {
+                "apiKey": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "userId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "username or password incorrect",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/Login"
+            },
+            "required": true,
+            "description": "Courier login credentials",
+            "name": "LoginRequest",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/deliveries": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "creates a new trustmile delivery event. The state of the TrustmileDelivery will be TRANSIT_TO_NEIGHBOUR ** works **",
+        "responses": {
+          "200": {
+            "description": "returns the new deliveryID",
+            "schema": {
+              "properties": {
+                "deliveryID": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/CreateDelivery"
+            },
+            "required": true,
+            "name": "CreateTrustmileDelivery",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "deliveries"
+        ]
+      },
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "Retrieves a list of deliveries. ** works, no history yet ** The default is to return the currently open deliveries The optionasl parameter 'history' will get a list of the last 50 deliveries within the last 3 months.",
+        "responses": {
+          "200": {
+            "description": "an array of open delivery deliveries",
+            "schema": {
+              "properties": {
+                "deliveries": {
+                  "items": {
+                    "$ref": "#/definitions/Delivery"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "properties": {
+                "history": {
+                  "type": "boolean",
+                  "description": "set to true to retereive historical deliveries"
+                }
+              }
+            },
+            "required": false,
+            "name": "GetHistory",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "deliveries"
+        ]
+      }
+    },
+    "/account": {
+      "delete": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "## Service: Reset Signup\n** not implemented **\n\nAllows a user to delete their account.  Currently only supported \nwhen the email address has not been verified.\n\nThe account to delete is based on the apiKey.  After this call \nthe apiKey is invalidated.\n\n## [status: not implemented]\n",
+        "responses": {
+          "200": {
+            "description": "the account was deleted",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          },
+          "409": {
+            "description": "the email address on the account is already verified",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "account"
+        ]
+      },
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "## Service: Check Signup, Get Account.\n** works **\n\nReturs the users account, including if the email addres has been verified.\n",
+        "responses": {
+          "200": {
+            "description": "the status of an account",
+            "schema": {
+              "properties": {
+                "account": {
+                  "$ref": "#/definitions/Account"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        },
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/deliveries/state/{deliveryState}": {
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "Retrieves a list of deliveries with a given state",
+        "responses": {
+          "200": {
+            "description": "an array of deliveries",
+            "schema": {
+              "properties": {
+                "deliveries": {
+                  "items": {
+                    "$ref": "#/definitions/Delivery"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "parameters": [
+          {
+            "required": true,
+            "type": "string",
+            "name": "deliveryState",
+            "enum": [
+              "NEWLY_CREATED",
+              "TRANSIT_TO_NEIGHBOUR",
+              "NEIGHBOUR_RECEIVED",
+              "RECIPIENT_RECEIVED",
+              "ABORTING",
+              "NEIGHBOUR_ABORTED",
+              "COURIER_ABORTED",
+              "CANCELLED",
+              "RECIPIENT_ARCHIVED",
+              "TIME_ARCHIVED"
+            ],
+            "in": "path"
+          }
+        ],
+        "tags": [
+          "deliveries"
+        ]
+      }
+    },
+    "/articles/{trackingNumber}": {
+      "delete": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "deletes the article from the delivery ** works ** removes delivery info from article, article record left intact",
+        "responses": {
+          "200": {
+            "description": "the tracking number and parcels were deleted",
+            "schema": {
+              "properties": {
+                "articles": {
+                  "items": {
+                    "$ref": "#/definitions/article"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "the article could not be deleted as the delivery is in a state that prohibits the action, such as after the delivery has been handed over to an alternate recipient",
+            "schema": {
+              "properties": {
+                "articles": {
+                  "items": {
+                    "$ref": "#/definitions/article"
+                  },
+                  "type": "array",
+                  "description": "a list of articles on the associated delivery"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "either the deliveryID or trackingNumber was not found",
+            "schema": {
+              "properties": {
+                "articles": {
+                  "items": {
+                    "$ref": "#/definitions/article"
+                  },
+                  "type": "array",
+                  "description": "a list of articles on the associated delivery"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          }
+        },
+        "tags": [
+          "deliveries"
+        ]
+      },
+      "parameters": [
+        {
+          "required": true,
+          "type": "string",
+          "name": "trackingNumber",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "get article for tracking number (NB. this assumes it that trackingnumber 1-1 on article.) ** works **",
+        "responses": {
+          "200": {
+            "description": "The article associated with this trackingnumber",
+            "schema": {
+              "properties": {
+                "article": {
+                  "$ref": "#/definitions/article"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/definitions/401"
+          },
+          "404": {
+            "description": "either the deliveryID or trackingNumber was not found",
+            "schema": {
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "deliveries"
+        ]
+      }
+    },
+    "/login/password": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "** works **\n\nused to update a couriers username and password\n",
+        "responses": {
+          "200": {
+            "description": "The password was sucessfully changed",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The password did not match the users password.",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The password did not meet complexity requirements",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "properties": {
+                "newPassword": {
+                  "type": "string",
+                  "description": "The new password for the user"
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The users current password"
+                }
+              }
+            },
+            "required": true,
+            "name": "LoginRequest",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "basePath": "/courier/v1",
+  "securityDefinitions": {
+    "internalApiKey": {
+      "type": "apiKey",
+      "name": "X-courier-apiKey",
+      "in": "header"
+    }
+  },
+  "definitions": {
+    "GeoLocation": {
+      "required": [
+        "latitude",
+        "longitude"
+      ],
+      "type": "object",
+      "description": "Essentially latitude and logitude of user's address",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "AddDelivery": {
+      "required": [
+        "courierSlug",
+        "trackingNumber",
+        "description",
+        "purchasedFrom"
+      ],
+      "type": "object",
+      "description": "The tracking number and courier slug for a given parcel required to be added to the user's account. Retailer Name is optional",
+      "properties": {
+        "trackingNumber": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "courierSlug": {
+          "type": "string"
+        }
+      }
+    },
+    "RecipientHandover": {
+      "required": [
+        "articleIds"
+      ],
+      "type": "object",
+      "properties": {
+        "recipientName": {
+          "type": "string"
+        },
+        "articleIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "NeighbourReceiveLookup": {
+      "type": "object",
+      "description": "Returned as a result of scanning the first item of a TMD",
+      "properties": {
+        "articles": {
+          "items": {
+            "$ref": "#/definitions/article"
+          },
+          "type": "array"
+        },
+        "alternateRecipient": {
+          "$ref": "#/definitions/UserInfo"
+        },
+        "deliveryId": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "correlationID": {
+          "type": "string"
+        }
+      }
+    },
+    "DeliveryUpdate": {
+      "required": [
+        "description"
+      ],
+      "type": "object",
+      "description": "Just can update the description",
+      "properties": {
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "NeighbourPickupInfo": {
+      "required": [
+        "neighbourName",
+        "neighbourAddress"
+      ],
+      "type": "object",
+      "properties": {
+        "recipientInfo": {
+          "type": "string"
+        },
+        "secretWord": {
+          "type": "string"
+        },
+        "neighbourPhone": {
+          "type": "string"
+        },
+        "courierName": {
+          "type": "string"
+        },
+        "neighbourAddress": {
+          "$ref": "#/definitions/AccountAddress"
+        },
+        "articleCount": {
+          "type": "integer"
+        },
+        "trackingNumber": {
+          "type": "string"
+        },
+        "packageDescription": {
+          "type": "string"
+        },
+        "neighbourName": {
+          "type": "string"
+        },
+        "correlationID": {
+          "type": "string"
+        }
+      }
+    },
+    "401": {
+      "required": [
+        "correlationID"
+      ],
+      "type": "object",
+      "description": "Not authorized.  Either the authorization key was missing or not present",
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "correlationID": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "KeyValuePair": {
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "article": {
+      "description": "A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.",
+      "properties": {
+        "trackingNumber": {
+          "type": "string"
+        },
+        "articleId": {
+          "type": "string"
+        }
+      }
+    },
+    "NeighbourReceive": {
+      "type": "object",
+      "description": "List of articles for the neighbour receive post operation",
+      "properties": {
+        "articles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Login": {
+      "description": "Required data for  login",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "The username to login with"
+        },
+        "password": {
+          "type": "string",
+          "description": "The password associated with the username"
+        },
+        "installationInformation": {
+          "$ref": "#/definitions/InstallationInformation"
+        }
+      }
+    },
+    "OrderInfo": {
+      "type": "object",
+      "description": "Details pertaining to a retailer order",
+      "properties": {
+        "orderId": {
+          "type": "string"
+        },
+        "retailerName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "retailerHelpUrl": {
+          "type": "string"
+        },
+        "retailerPhone": {
+          "type": "string"
+        },
+        "orderEmailUrl": {
+          "type": "string"
+        },
+        "retailerImageUrl": {
+          "type": "string"
+        },
+        "dispatchEmailUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "DeliveryInfo": {
+      "type": "object",
+      "description": "A single summary of delivery info",
+      "properties": {
+        "courierPhone": {
+          "type": "string"
+        },
+        "deliveryIsValid": {
+          "type": "boolean"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "courierName": {
+          "type": "string"
+        },
+        "courierTrackingUrl": {
+          "type": "string"
+        },
+        "promotionSourceUrl": {
+          "type": "string"
+        },
+        "isDelivered": {
+          "type": "boolean"
+        },
+        "promotionViewId": {
+          "type": "string"
+        },
+        "trackingEvents": {
+          "items": {
+            "$ref": "#/definitions/TrackingInformation"
+          },
+          "type": "array"
+        },
+        "cardNumber": {
+          "type": "string"
+        },
+        "orderId": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "promotionDestUrl": {
+          "type": "string"
+        },
+        "articles": {
+          "items": {
+            "$ref": "#/definitions/article"
+          },
+          "type": "array"
+        },
+        "displayStatus": {
+          "type": "string"
+        },
+        "latestStatus": {
+          "type": "string"
+        },
+        "isNeighbour": {
+          "type": "boolean"
+        },
+        "retailerName": {
+          "type": "string"
+        },
+        "courierWeb": {
+          "type": "string"
+        },
+        "feedbackLeft": {
+          "type": "boolean"
+        },
+        "imageUrl": {
+          "type": "string"
+        },
+        "deliveryId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "promotionRetailerName": {
+          "type": "string"
+        },
+        "trackingNumber": {
+          "type": "string"
+        },
+        "trackingInfoSupported": {
+          "type": "boolean"
+        },
+        "retailerImageUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "AddressLocation": {
+      "type": "object",
+      "description": "Essentially latitude and logitude of user's address",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "InstallationInformation": {
+      "description": "A collection of information that describes an instance of the application and what device it is running on.",
+      "properties": {
+        "OSType": {
+          "type": "string",
+          "description": "Android or Apple or other"
+        },
+        "OSMinorVersion": {
+          "type": "string",
+          "description": "the minor version of the mobile OS"
+        },
+        "DeviceIdentifier": {
+          "type": "string",
+          "description": "the device ID of the mobile device"
+        },
+        "ApplicationVersion": {
+          "type": "string",
+          "description": "the version of the application installed, such as 1  or 1.1 or 1.1.1"
+        },
+        "OSMajorVersion": {
+          "type": "string",
+          "description": "The major version of the mobile OS"
+        }
+      }
+    },
+    "Courier": {
+      "description": "A courier company",
+      "properties": {
+        "courierId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "AccountUpdate": {
+      "description": "Users updated information, used for inputting name and address after initial register.",
+      "properties": {
+        "accountAddress": {
+          "$ref": "#/definitions/AccountAddress"
+        },
+        "userPreferences": {
+          "$ref": "#/definitions/Dictionary"
+        },
+        "trustmileNeighbour": {
+          "type": "boolean"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "installationInformation": {
+          "$ref": "#/definitions/InstallationInformation"
+        }
+      }
+    },
+    "PromotionClick": {
+      "properties": {
+        "promotionId": {
+          "type": "string"
+        }
+      }
+    },
+    "Delivery": {
+      "required": [
+        "articles"
+      ],
+      "type": "object",
+      "properties": {
+        "articles": {
+          "items": {
+            "$ref": "#/definitions/article"
+          },
+          "type": "array"
+        },
+        "recipientInfo": {
+          "$ref": "#/definitions/RecipientInfo"
+        },
+        "deliveryId": {
+          "type": "string"
+        },
+        "lastUpdated": {
+          "type": "dateTime"
+        },
+        "neighbour": {
+          "$ref": "#/definitions/UserInfo"
+        },
+        "state": {
+          "type": "string"
+        }
+      }
+    },
+    "accountForgotPassword": {
+      "description": "Forgotten password reset request",
+      "properties": {
+        "emailAddress": {
+          "type": "string",
+          "description": "The emailAddress to login with"
+        },
+        "resetToken": {
+          "type": "string",
+          "description": "The token provided on reset."
+        }
+      }
+    },
+    "TrackingInformation": {
+      "description": "reperesents 1 tracking event for a delivery",
+      "properties": {
+        "checkpoint_time": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "isTrustMileEvent": {
+          "type": "boolean",
+          "description": "true means this is a trustmile event, false means this is a courier event"
+        },
+        "tacking_number": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "string",
+          "description": "a code to describe this event, for courier events the tag will be the AfterShip tag.  For trustmile events the set of tages has not yet been determined"
+        },
+        "location": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string",
+          "description": "a free-form text description of the event"
+        },
+        "slug": {
+          "type": "string",
+          "description": "tracking slug"
+        }
+      }
+    },
+    "RecipientDetails": {
+      "required": [
+        "fullName"
+      ],
+      "type": "object",
+      "description": "When a \"neighbour\" hands over articles to \"recipient\", if user is unknown to TrustMile, neighbour shall provide email address.",
+      "properties": {
+        "fullName": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "address": {
+          "$ref": "#/definitions/AccountAddress"
+        }
+      }
+    },
+    "accountLogin": {
+      "description": "Required data for user login",
+      "properties": {
+        "password": {
+          "type": "string",
+          "description": "The password associated with the username"
+        },
+        "emailAddress": {
+          "type": "string",
+          "description": "The emailAddress to login with"
+        },
+        "installationInformation": {
+          "$ref": "#/definitions/InstallationInformation"
+        }
+      }
+    },
+    "CreateDelivery": {
+      "required": [
+        "articles",
+        "neighbourId"
+      ],
+      "type": "object",
+      "properties": {
+        "articles": {
+          "items": {
+            "$ref": "#/definitions/article"
+          },
+          "type": "array"
+        },
+        "location": {
+          "$ref": "#/definitions/GeoLocation"
+        },
+        "neighbourId": {
+          "type": "string"
+        }
+      }
+    },
+    "RecipientInfo": {
+      "type": "object",
+      "properties": {
+        "phoneNumber": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string",
+          "format": "email"
+        }
+      }
+    },
+    "PromotionViewList": {
+      "properties": {
+        "promotionUrl": {
+          "type": "string"
+        },
+        "promotionName": {
+          "type": "string"
+        }
+      }
+    },
+    "PasswordUpdate": {
+      "required": [
+        "oldPassword",
+        "newPassword"
+      ],
+      "type": "object",
+      "description": "Change the users password",
+      "properties": {
+        "newPassword": {
+          "type": "string"
+        },
+        "oldPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "PromotionView": {
+      "properties": {
+        "promotionUrl": {
+          "type": "string"
+        },
+        "promotionViewId": {
+          "type": "string"
+        },
+        "promotionId": {
+          "type": "string"
+        }
+      }
+    },
+    "AnonymousRegister": {
+      "required": [
+        "installationInformation"
+      ],
+      "description": "anonymous registration",
+      "properties": {
+        "installationInformation": {
+          "$ref": "#/definitions/InstallationInformation"
+        }
+      }
+    },
+    "Conversation": {
+      "description": "represents a single conversation.  A conversation may or may not be tied to a delivery.  It is also possible to have a conversation that has not yet started - the messages tab will show a list of conversation AND neighbour pickups that the user can create a conversation againt, in this situation the conversationId will be null",
+      "properties": {
+        "deliveriestate": {
+          "type": "string",
+          "description": "the collection state of the pickup (delivery).  one of 'ready to pickup', 'collected awaiting feedback', 'collected, closed'"
+        },
+        "deliveryId": {
+          "type": "string",
+          "description": "If this message relates to a , the ID of the delivery.  Null indicates a  system message",
+          "format": "uuid"
+        },
+        "unreadMessage": {
+          "type": "integer",
+          "description": "the number of messagesd in the conversation the user has not read"
+        },
+        "conversationId": {
+          "type": "string",
+          "description": "The conversationId of the conversation.  This value can be null in cases where the user has the ability to start a conversation but no conversation has been started.  A conversationId can exist with 0 messages in the conversation.",
+          "format": "uuid"
+        },
+        "neighbourAddress": {
+          "type": "string",
+          "description": "the pickup address of the neighbour"
+        },
+        "systemMessageTitle": {
+          "description": "when this is a system message, this is the title to display on the conversations screen"
+        },
+        "neighbourName": {
+          "type": "string",
+          "description": "the name of the neighbour"
+        },
+        "totalMessages": {
+          "type": "integer",
+          "description": "the total number of messages in the conversation"
+        }
+      }
+    },
+    "Account": {
+      "type": "object",
+      "description": "An object corrosponding to a users 'account'",
+      "properties": {
+        "userName": {
+          "type": "string"
+        },
+        "accountAddress": {
+          "$ref": "#/definitions/AccountAddress"
+        },
+        "installationInformation": {
+          "$ref": "#/definitions/InstallationInformation"
+        },
+        "emailVerified": {
+          "type": "boolean"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "userPreferences": {
+          "$ref": "#/definitions/Dictionary"
+        }
+      }
+    },
+    "AccountRegister": {
+      "required": [
+        "emailAddress",
+        "password"
+      ],
+      "description": "Content required for registering an account",
+      "properties": {
+        "accountAddress": {
+          "$ref": "#/definitions/AccountAddress"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "installationInformation": {
+          "$ref": "#/definitions/InstallationInformation"
+        }
+      }
+    },
+    "ApplicationSettings": {
+      "description": "a set of properties used to enable & disable features on the client",
+      "properties": {
+        "trustMileFeedback": {
+          "type": "boolean",
+          "description": "show / hide capture of feedback for TrustMile on feedback screen"
+        },
+        "isTrustMileNeighbour": {
+          "type": "boolean",
+          "description": "yes/no that this user has given permission to receive deliveries on behalf of others"
+        },
+        "showMessages": {
+          "type": "boolean",
+          "description": "show/hide the messages icon (no messages until ready for neighbour collections)"
+        },
+        "promptForNeighbourSignup": {
+          "type": "boolean",
+          "description": "yes/no to show a neighbour signup prompt on My Deliveries"
+        },
+        "heartbeat": {
+          "type": "integer",
+          "description": "0 (off) or greater, being the number of minutes between sending heartbeats to the server"
+        },
+        "offerNeighbourSignupInMenu": {
+          "type": "boolean",
+          "description": "yes/no to offer neighbour signup in the SETTINGS menu"
+        }
+      }
+    },
+    "DeliveryFeedback": {
+      "required": [
+        "rating"
+      ],
+      "type": "object",
+      "description": "Delivery Feedback on delivered item",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "rating": {
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "type": "number",
+          "format": "integer"
+        },
+        "complaint": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "netPromoterScore": {
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "type": "number",
+          "format": "integer"
+        },
+        "netPromoterScoreComment": {
+          "type": "string"
+        }
+      }
+    },
+    "alternateRecipient": {
+      "required": [
+        "consumerId"
+      ],
+      "properties": {
+        "consumerId": {
+          "type": "string",
+          "description": "the Id of the alternate recipient"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "physicalAddress": {
+          "properties": {
+            "streetType": {
+              "type": "string"
+            },
+            "longitude": {
+              "type": "number",
+              "description": "the longitude of the recipient",
+              "format": "double"
+            },
+            "suburb": {
+              "type": "string"
+            },
+            "unitNumber": {
+              "type": "string"
+            },
+            "postcode": {
+              "pattern": "^[0-9]{4}$",
+              "type": "string"
+            },
+            "streetNumber": {
+              "type": "string"
+            },
+            "latitude": {
+              "type": "number",
+              "description": "the latitude of the recipient",
+              "format": "double"
+            },
+            "streetName": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "AccountAddress": {
+      "required": [
+        "addressLine1",
+        "addressLine2",
+        "suburb",
+        "state",
+        "postcode",
+        "countryCode"
+      ],
+      "type": "object",
+      "description": "Object with users address information",
+      "properties": {
+        "countryCode": {
+          "type": "string"
+        },
+        "suburb": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "postcode": {
+          "type": "string"
+        },
+        "addressLine1": {
+          "type": "string"
+        },
+        "addressLine2": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/definitions/AddressLocation"
+        }
+      }
+    },
+    "TrustMileDeliveryInfo": {
+      "type": "object",
+      "description": "Detail info about a trustmile delivery",
+      "properties": {
+        "articles": {
+          "items": {
+            "$ref": "#/definitions/article"
+          },
+          "type": "array"
+        },
+        "secretWord": {
+          "type": "string"
+        },
+        "recipientName": {
+          "type": "string"
+        }
+      }
+    },
+    "Dictionary": {
+      "properties": {
+        "values": {
+          "items": {
+            "$ref": "#/definitions/KeyValuePair"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "UserPresence": {
+      "description": "Schema for updating the users status for an address.",
+      "properties": {
+        "status": {
+          "type": "boolean"
+        },
+        "location": {
+          "$ref": "#/definitions/AddressLocation"
+        }
+      }
+    },
+    "Retailer": {
+      "properties": {
+        "contactNumber": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "DelegateDelivery": {
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "deliveryId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "PasswordReset": {
+      "required": [
+        "newPassword"
+      ],
+      "type": "object",
+      "description": "Set the users password",
+      "properties": {
+        "newPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "UserInfo": {
+      "type": "object",
+      "description": "An object corrosponding to a users 'account'",
+      "properties": {
+        "accountAddress": {
+          "$ref": "#/definitions/AccountAddress"
+        },
+        "travelTimeValue": {
+          "type": "integer"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "travelTimeText": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Message": {
+      "description": "a single message in a conversation",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "text description of the person who wrote this message."
+        },
+        "sequenceNumber": {
+          "type": "integer",
+          "description": "the order of this message in this conversation"
+        },
+        "isFromMe": {
+          "type": "boolean",
+          "description": "was this message sent but the requesting user"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "isUnread": {
+          "type": "boolean",
+          "description": "has the user read this message or not."
+        },
+        "messageContent": {
+          "type": "string",
+          "description": "the content of the message"
+        }
+      }
+    },
+    "FeedbackMessage": {
+      "description": "the content of a feedback post",
+      "properties": {
+        "consumerName": {
+          "type": "string"
+        },
+        "feedbackMessage": {
+          "type": "string"
+        },
+        "consumerEmail": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "swagger": "2.0",
+  "consumes": [
+    "application/json"
+  ]
+}

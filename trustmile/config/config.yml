@@ -1,0 +1,288 @@
+version: 1
+
+env_type: 'prod'
+
+db:
+  dev:
+    sqlalchemy:
+      url: postgresql://pgbouncer:6432/trustmile_dev
+      args: {}
+  test:
+    sqlalchemy:
+      url: postgresql://pgbouncer:6432/trustmile_test
+      args: {}
+
+
+  remote_test:
+    sqlalchemy:
+      #url: postgresql://pgbouncer:6432/trustmile_remote_test
+      url: postgresql://localhost:6432/trustmile_test
+      args: {}
+
+  prod:
+    sqlalchemy:
+      url: postgresql://pgbouncer:6432/trustmile_prod
+      args: {}
+
+#  remote_test:
+#    sqlalchemy:
+#      url: postgresql://localhost:6432/trustmile_remote_test
+#      args: {}
+#
+#  prod:
+#    sqlalchemy:
+#      url: postgresql://localhost:6432/trustmile_prod
+#      args: {}
+
+
+flask:
+  client:
+    environ:
+      dev:
+        base_url: 'http://localhost:5000/consumer/v1'
+        content_type: 'application/json'
+      test:
+        base_url: 'http://localhost:5000/consumer/v1'
+        content_type: 'application/json'
+
+      remote_test:
+        base_url: 'http://api.trustmile.com/consumer/v1'
+        #base_url: 'http://localhost:5000/consumer/v1'
+        multithread: True
+        content_type: 'application/json'
+
+
+      prod:
+        base_url: 'https://api.trustmile.com/consumer/v1'
+        multithread: True
+        content_type: 'application/json'
+
+redis_url:
+  prod: redis://redisrep-001.irtgjd.0001.apse2.cache.amazonaws.com:6379/1
+  dev: redis://redisrep-001.irtgjd.0001.apse2.cache.amazonaws.com:6379/0
+  test: redis://localhost:6379/0
+
+archive_days: 5
+
+
+pushwoosh:
+  prod:
+    application: FBB01-25B40
+    auth: EXobsPmeEM7Kxi79WbIwP3QLLMbnETxtuGVDTxLuq5yhAopsIinIl2MkKcLZ4sPo2FsY0zcqcDQJsq7qXp6w
+  dev:
+    application: 58466-5D86F
+    auth: m2letk3Hx06LVn7t1NSzvBytTFKCiPVP1febHfx5fv35GauY361bMnVDzChDDzDRkO7tdtuACkDiC9fVetqq
+  test:
+    application: 58466-5D86F
+    auth: m2letk3Hx06LVn7t1NSzvBytTFKCiPVP1febHfx5fv35GauY361bMnVDzChDDzDRkO7tdtuACkDiC9fVetqq
+
+enabled_postcodes:
+  prod:
+    - 2170
+  dev:
+    - 2170
+  test:
+    - 2170
+
+
+branch:
+  dev:
+    branch_key: key_test_pfk0xetlzxpPsOY7JGG5bllgBAaSuNNY
+    branch_secret: secret_test_zjvnko6TiLIOoEr4HJJD92Ufxrs3oyfL
+    base_url: https://api.branch.io/v1/url
+  test:
+    branch_key: key_test_pfk0xetlzxpPsOY7JGG5bllgBAaSuNNY
+    branch_secret: secret_test_zjvnko6TiLIOoEr4HJJD92Ufxrs3oyfL
+    base_url: https://api.branch.io/v1/url
+  prod:
+    branch_key: key_live_kdhZxgqewypSyU80LPILKgjjxEiUrUKT
+    branch_secret: secret_live_BPGg6WGevST98tFxLYoA36QtdwzOeFu8
+    base_url: https://api.branch.io/v1/url
+
+
+#
+#  lass werkzeug.test.EnvironBuilder(path='/', base_url=None, query_string=None, method='GET',
+#   input_stream=None, content_type=None, content_length=None, errors_stream=None, multithread=False,
+#   multiprocess=False, run_once=False, headers=None, data=None, environ_base=None, environ_overrides=None, charset='utf-8')
+
+#db_user:
+#  dev:
+#  prod:
+
+mandrill:
+  api_key:
+    #dev: AzJK-PzdRORIBbtcrqmG_g
+    dev: AzJK-PzdRORIBbtcrqmG_g
+    prod: K7JgrteE5ByKHxT1gv8Xsg
+    test: AzJK-PzdRORIBbtcrqmG_g
+#test: K7JgrteE5ByKHxT1gv8Xsg
+    #test: K7JgrteE5ByKHxT1gv8Xsg
+    remote_test: AzJK-PzdRORIBbtcrqmG_g
+
+email:
+  verification_url:
+    dev: 'https://www.trustmile.com/dev/account/VerifyEmail/'
+    prod: 'https://www.trustmile.com/account/verifyEmail/'
+    test: 'https://www.trustmile.com/account/verifyEmail/'
+  reset_url:
+    prod: 'https://www.trustmile.com/account/resetPassword/'
+    dev: 'https://www.trustmile.com/dev/account/resetPassword/'
+    test: 'https://www.trustmile.com/dev/account/resetPassword/'
+  retailer_reset_url:
+    prod: 'https://www.trustmile.com/forgot-password/'
+    dev: 'https://www.trustmile.com/forgot-password/'
+    test: 'https://www.trustmile.com/forgot-password/'
+
+aftership:
+  api_key:
+    dev: 701f8f65-40d6-4d58-a4bd-0eaea9fc4c3e
+    prod: 701f8f65-40d6-4d58-a4bd-0eaea9fc4c3e
+    test: 701f8f65-40d6-4d58-a4bd-0eaea9fc4c3e
+    remote_test: 701f8f65-40d6-4d58-a4bd-0eaea9fc4c3e
+  courier_data: couriers-aftership.json
+
+assets:
+  image_url_base: http://assets.trustmile.com/images/courier/
+  retailer_image_url_base: http://assets.trustmile.com/images/retailer/
+
+
+tm_tracking_url:
+  dev: https://www.trustmile.com/dev/track
+  test: https://www.trustmile.com/dev/track
+  prod: https://www.trustmile.com/track
+
+
+
+deep_link_scheme:
+  dev: trustmile://
+  test: trustmile://
+  prod: trustmile://
+
+#
+#pusher:
+#  dev:
+#  test:
+#    key: 75ef3e062925ca5a618e
+#    secret: 1b512d861251d0e3ed77
+#    appid: 140295
+#  prod:
+
+
+google:
+  api_key:
+    dev: AIzaSyCSq6WKgNSjjU6nwC3ZhJmy7ZoHeJ4nMuk
+    test: AIzaSyCSq6WKgNSjjU6nwC3ZhJmy7ZoHeJ4nMuk
+    remote_test: AIzaSyCSq6WKgNSjjU6nwC3ZhJmy7ZoHeJ4nMuk
+    prod: AIzaSyCSq6WKgNSjjU6nwC3ZhJmy7ZoHeJ4nMuk
+
+
+# Meters
+location:
+  default_radius: 1600
+
+
+formatters:
+    simpleFormater:
+        format: "%(asctime)s - %(levelname)s: %(message)s"
+        datefmt: "%Y/%m/%d %H:%M:%S"
+
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        formatter: simpleFormater
+        level: DEBUG
+        stream: ext://sys.stdout
+    file:
+        class : logging.handlers.RotatingFileHandler
+        formatter: simpleFormater
+        maxBytes: 100000000
+        backupCount: 100
+        level: DEBUG
+        encoding: utf-8
+        filename: /var/log/trustmile/api.log
+    gunicorn_file:
+        class : logging.handlers.RotatingFileHandler
+        formatter: simpleFormater
+        maxBytes: 100000000
+        backupCount: 100
+        level: DEBUG
+        encoding: utf-8
+        filename: /var/log/gunicorn/gunicorn.log
+
+    celery_file:
+        class : logging.handlers.RotatingFileHandler
+        formatter: simpleFormater
+        maxBytes: 100000000
+        backupCount: 100
+        level: DEBUG
+        encoding: utf-8
+        filename: celery_internal.log
+loggers:
+    trustmile:
+      level: DEBUG
+      handlers: [file]
+    sqlalchemy:
+      level: WARN
+      handlers: [file]
+    gunicorn:
+      level: DEBUG
+      handlers: [gunicorn_file]
+    celery:
+      level: DEBUG
+      handlers: [celery_file]
+    shapely:
+      level: INFO
+      handlers: [file]
+
+root:
+    level: DEBUG
+    handlers: [file]
+
+emailAddresses:
+  dev:
+    feedback: 'feedback+dev@trustmile.com'
+  test:
+    feedback: 'feedback+test@trustmile.com'
+  prod:
+    feedback: 'feedback@trustmile.com'
+
+couriersPlease:
+  ftpHost: ftp.couriersplease.com.au
+  ftpUser: extvend
+  ftpPass: pass1234$
+  ftpDir: incoming
+  contractorNum: 1234
+
+
+retailerIntegration:
+  dev:
+    imapServer: 'imap.gmail.com'
+    imapPort: '993'
+    imapUsername: 'ri_test@trustmile.com'
+    imapPassword: 'R!_Test#2'
+  test:
+    imapServer: 'secure.emailsrvr.com'
+    imapPort: '993'
+    imapUsername: 'ri_test@trustmile.com'
+    imapPassword: 'R!_Test#2'
+  prod:
+    imapServer: 'imap.gmail.com'
+    imapPort: '993'
+    imapUsername: 'ri_test@trustmile.com'
+    imapPassword: 'R!_Test#2'
+
+adminAPI:
+  dev:
+    apiKey: 'apieufr392q45679q(@^*(%KJbglhgdshfbaepiu^%@$*^%@RFJHVBLKJB:LK'
+  test:
+    apiKey: 'apieufr392q45679q(@^*(%KJbglhgdshfbaepiu^%@$*^%@RFJHVBLKJB:LK'
+  prod:
+    apiKey: 'apieufr392q45679q(@^*(%KJbglhgdshfbaepiu^%@$*^%@RFJHVBLKJB:LK'
+
+s3:
+  promotion_s3_access_key: 'AKIAIO23HYHLMMJYDW2Q'
+  promotion_s3_secret_access_key: '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'
+  region: 'ap-southeast-2'
+  promotion_bucket: 'assets.trustmile.com'
+  promotion_image_prefix: '/images/promotion'

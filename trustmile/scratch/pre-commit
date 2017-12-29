@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+export TRUSTMILE_ENV_TYPE=test
+function exit_on_fail {
+
+    code=$?
+    echo "Exit code of test is " +  $code
+    if [ "$code" != "0" ]; then
+        echo -n "Not all tests pass. Commit (y/n): "
+        read response
+        if [ "$response" == "y" ]; then
+            exit 0
+        fi
+
+        exit $code
+
+    fi
+
+}
+
+nosetests -v  trustmile.tests.test_api:ConsumerApiTest
+exit_on_fail
+nosetests -v  trustmile.tests.test_deliveries:DeliveriesTest
+exit_on_fail
+nosetests -v  trustmile.tests.test_distances:DistancesTest
+exit_on_fail
+nosetests -v  trustmile.tests.test_api_courier:CourierApiTest
+code=$?
+if [ "$code" == "0" ]; then
+    exit 0
+fi
+exit_on_fail

@@ -1,0 +1,27 @@
+{
+        "countryCode"
+:
+        "AU",     "suburb"
+:
+        "Elizabeth Bay",     "state"
+:
+        "NSW",     "addressLine2":
+      "",     "postcode":
+        "2011",     "addressLine1"
+:
+        "801/12 Ithaca Rd"
+},
+,
+"fullName"
+:
+"James Arthurs", "installationInformation"
+:
+{
+        "OSType" ::
+        "iOS", "OSMinorVersion": "1",
+            "DeviceIdentifier":
+        "123123123123123123", "ApplicationVersion" : "0.1",
+            "OSMajorVersion":"8"
+}
+}
+

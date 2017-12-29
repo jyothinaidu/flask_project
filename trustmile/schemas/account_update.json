@@ -1,0 +1,17 @@
+{
+  "accountAddress": {
+    "countryCode": "string",
+    "suburb": "string",
+    "state": "string",
+    "postcode": "string",
+    "address": "string"
+  },
+  "fullName": "string",
+  "installationInformation": {
+    "OSType": "string",
+    "OSMinorVersion": "string",
+    "DeviceIdentifier": "string",
+    "ApplicationVersion": "string",
+    "OSMajorVersion": "string"
+  }
+}

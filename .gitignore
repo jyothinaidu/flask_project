@@ -1,0 +1,6 @@
+Design - v1.1
+*.idea/workspace.xml
+*.idea/misc.xml
+*.idea/trustmile-backend.iml
+*.log
+/flask-sqlalchemy/

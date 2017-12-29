@@ -1,0 +1,20 @@
+{
+  "accountAddress": {
+    "countryCode": "AU",
+    "suburb": "Elizabeth Bay",
+    "state": "NSW",
+    "postcode": "2011",
+    "address": "801/12 Ithaca Rd"
+  },
+  "fullName": "James Bruceton",
+  "password": "boundary1234",
+  "emailAddress": "bruce11@trustmile.com",
+  "installationInformation": {
+    "OSType": "iOS",
+    "OSMinorVersion": "1",
+    "DeviceIdentifier": "123123123123123123",
+    "ApplicationVersion": "0.1",
+    "OSMajorVersion": "8"
+  }
+}
+a

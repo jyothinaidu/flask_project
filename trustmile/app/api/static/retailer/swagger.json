@@ -1,0 +1,1054 @@
+{
+  "info": {
+    "version": "1.0",
+    "description": "Describes the API that allows administrative functions.\nPrimarily dsigned to be used to allow the .NET website server to communicate with the python API backend\n\n## correlationID\n  This parameter is returned with every request.\n\n  The intent is that the server side will generate a unique id for each request, and feature this ID in all logging that occurs.  This will allow us to very easily to resolve issues faced consumers of the API.  When questioned with 'Why didn't this work' or 'This isn't working correctly' - we can identify the request server-side and easily identify events on the server associated with that request.\n\n  My intent is to generate a log/trace of every request\n\n## security\n  Requests will be secured with the X-admin-apiKey.  This will be a fixed secret shared key.\n\n## logon / logoff / sessions\n  There will be no logon or log off operations\n",
+    "title": "Trust Mile Admin Interface"
+  },
+  "paths": {
+    "/account/deliveries/retailerintegration": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "Adds a retailer integration delivery to consumer if the delivery is not existing and send a email notification to the user",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/AddDelivery"
+            },
+            "required": true,
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit answers were updated.",
+            "schema": {
+              "properties": {
+                "emailAddress": {
+                  "type": "string"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/register": {
+      "post": {
+        "description": "## Service: Signup\n\nCreates a new retailer account and logs in the retailer. Returns an apiKey to be used in subsequent requests.\n\nAfter signup the user will be unable to proceed until their email address is verified.  The users device information is caputired at this stage.\n",
+        "responses": {
+          "200": {
+            "description": "account created",
+            "schema": {
+              "properties": {
+                "apiKey": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "the email address, website name, or website URL alread exists",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "username already exists",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/RetailerRegister"
+            },
+            "required": true,
+            "description": "Registration / signup",
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/login": {
+      "post": {
+        "description": "## __Service: Login__\nLogs a retailer in to their account and returns the API key to be used in subsequent requests.\n",
+        "responses": {
+          "200": {
+            "description": "the login was sucessful.",
+            "schema": {
+              "properties": {
+                "apiKey": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "username or password incorrectmaps",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/RetailerLogin"
+            },
+            "required": true,
+            "description": "User login credentials",
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/seal-audit": {
+      "post": {
+        "description": "Sets the audit answers, replacing all existing details",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/RetailerSealAuditArray"
+            },
+            "required": true,
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit answers were updated.",
+            "schema": {
+              "properties": {
+                "emailAddress": {
+                  "type": "string"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "seal audit answers",
+            "schema": {
+              "properties": {
+                "seal_audits": {
+                  "items": {
+                    "$ref": "#/definitions/RetailerSealAudit"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid API Key",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/account/courier-mapping": {
+      "post": {
+        "description": "Sets the audit answers, replacing all existing details",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/CourierMappingArray"
+            },
+            "required": true,
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit answers were updated.",
+            "schema": {
+              "properties": {
+                "emailAddress": {
+                  "type": "string"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "get courier mappings",
+            "schema": {
+              "properties": {
+                "courier_mappings": {
+                  "$ref": "#/definitions/CourierMappingArray"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid API Key",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/account/forgotPassword": {
+      "post": {
+        "description": "## Service: Forgot Password\n\nTriggers an reset password email to be sent to the supplied email address.\n** Impelemtned **\n",
+        "responses": {
+          "200": {
+            "description": "a reset password link was sent to the email address",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "the email address was not found",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/accountForgotPassword"
+            },
+            "required": true,
+            "description": "bob",
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "Updates a users details\n\n** Implemented **\n",
+        "responses": {
+          "200": {
+            "description": "the details were saved",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "verification failed.  Missing field, etc",
+            "schema": {
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/RetailerUpdate"
+            },
+            "required": true,
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      },
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "## Service: Check Signup, Get Account.\n\nReturs the users account, including if the email addres has been verified.\n\n** Implemented **\n",
+        "responses": {
+          "200": {
+            "description": "the status of an account",
+            "schema": {
+              "properties": {
+                "retailer": {
+                  "$ref": "#/definitions/RetailerObject"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        },
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/attributes": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "Updates the retailers attributes\n\nThis overwrites ALL attributes, so be careful.\n",
+        "responses": {
+          "200": {
+            "description": "The",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "the new password did not meet complexity requirements",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "the supplied current password did not match the users current password",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/RetailerAttributeUpdate"
+            },
+            "required": true,
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/deliveries/day/{weekorMonth}": {
+      "parameters": [
+        {
+          "format": "uuid",
+          "required": true,
+          "type": "string",
+          "name": "weekorMonth",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "##Service: GetDeliveriesfordays\n\nRetrieves the tracking information for a delivery.\n",
+        "responses": {
+          "200": {
+            "description": "Deliveries for week or month.",
+            "schema": {
+              "properties": {
+                "deliverydays": {
+                  "items": {
+                    "$ref": "#/definitions/DeliveryDays"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "deliveries not found for the specified days, or the user does not have permission to view the tracking for these deliveries",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        },
+        "tags": [
+          "deliveries"
+        ]
+      }
+    },
+    "/account/deliveries/courier/{weekorMonth}": {
+      "parameters": [
+        {
+          "format": "uuid",
+          "required": true,
+          "type": "string",
+          "name": "weekorMonth",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Total Number of deliveries from the retailer grouped by courier over the same date range for week or month",
+            "schema": {
+              "properties": {
+                "retailer": {
+                  "items": {
+                    "$ref": "#/definitions/RetailerCourier"
+                  },
+                  "type": "array"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "deliveries not found from the retailer grouped by courier over the same date range",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/account/resetPassword/{resetToken}": {
+      "post": {
+        "description": "Sets the users password to that supplied ** Implemented** Jorourke  Needed",
+        "responses": {
+          "200": {
+            "description": "The password was set.",
+            "schema": {
+              "properties": {
+                "emailAddress": {
+                  "type": "string"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "the token was not found (incorrect, expired, etc)",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "the new password did not meet complexity requirements",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/PasswordReset"
+            },
+            "required": true,
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      },
+      "parameters": [
+        {
+          "required": true,
+          "type": "string",
+          "name": "resetToken",
+          "in": "path"
+        }
+      ],
+      "get": {
+        "description": "Validates a token and returns the email address associated with this token\n** Implemented **\n",
+        "responses": {
+          "200": {
+            "description": "The token is valid.",
+            "schema": {
+              "properties": {
+                "emailAddress": {
+                  "type": "string"
+                },
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "the token was not found (incorrect, expired, etc)",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/ping": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Ping Sucessful"
+          },
+          "401": {
+            "description": "Invalid API Key",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        }
+      }
+    },
+    "/account/password": {
+      "post": {
+        "security": [
+          {
+            "internalApiKey": []
+          }
+        ],
+        "description": "## Service: Set Login\n\nAllows a user to change their password.\n** Implemented **\n",
+        "responses": {
+          "200": {
+            "description": "the password was changed",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "the new password did not meet complexity requirements",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "the supplied current password did not match the users current password",
+            "schema": {
+              "properties": {
+                "correlationID": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/PasswordUpdate"
+            },
+            "required": true,
+            "name": "body",
+            "in": "body"
+          }
+        ],
+        "tags": [
+          "account"
+        ]
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "basePath": "/retailer",
+  "securityDefinitions": {
+    "internalApiKey": {
+      "type": "apiKey",
+      "name": "X-retailer-apiKey",
+      "in": "header"
+    }
+  },
+  "definitions": {
+    "RetailerSealAuditArray": {
+      "items": {
+        "$ref": "#/definitions/RetailerSealAudit"
+      },
+      "type": "array",
+      "description": "array of RetailerSealAudit"
+    },
+    "RetailerUpdate": {
+      "type": "object",
+      "description": "Retailer account fields that can be updated",
+      "properties": {
+        "contact_firstname": {
+          "type": "string"
+        },
+        "website_name": {
+          "type": "string"
+        },
+        "contact_emailaddress": {
+          "type": "string"
+        },
+        "contact_lastname": {
+          "type": "string"
+        },
+        "contact_phone": {
+          "type": "string"
+        },
+        "website_url": {
+          "type": "string"
+        }
+      }
+    },
+    "AddDelivery": {
+      "required": [
+        "courierSlug",
+        "trackingNumber",
+        "description",
+        "purchasedFrom",
+        "emailAddress"
+      ],
+      "type": "object",
+      "description": "The tracking number and courier slug for a given parcel required to be added to the user's account. Retailer Name is optional",
+      "properties": {
+        "trackingNumber": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "purchasedFrom": {
+          "type": "string"
+        },
+        "courierSlug": {
+          "type": "string"
+        }
+      }
+    },
+    "CourierMapping": {
+      "type": "object",
+      "properties": {
+        "sourceText": {
+          "type": "string"
+        },
+        "courierName": {
+          "type": "string"
+        }
+      }
+    },
+    "RetailerLogin": {
+      "type": "object",
+      "description": "Required data for user login",
+      "properties": {
+        "password": {
+          "type": "string",
+          "description": "The password associated with the username"
+        },
+        "emailAddress": {
+          "type": "string",
+          "description": "The emailAddress to login with"
+        }
+      }
+    },
+    "PasswordUpdate": {
+      "required": [
+        "oldPassword",
+        "newPassword"
+      ],
+      "type": "object",
+      "description": "Change the users password",
+      "properties": {
+        "newPassword": {
+          "type": "string"
+        },
+        "oldPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "RetailerRegister": {
+      "type": "object",
+      "properties": {
+        "contact_phoneNumber": {
+          "type": "string"
+        },
+        "contact_firstname": {
+          "type": "string"
+        },
+        "website_name": {
+          "type": "string"
+        },
+        "contact_emailAddress": {
+          "type": "string"
+        },
+        "contact_lastname": {
+          "type": "string"
+        },
+        "contact_password": {
+          "type": "string"
+        },
+        "website_url": {
+          "type": "string"
+        }
+      }
+    },
+    "RetailerSealAudit": {
+      "type": "object",
+      "description": "Gets and sets seal audit information",
+      "properties": {
+        "answer": {
+          "type": "boolean"
+        },
+        "question_text": {
+          "type": "string"
+        },
+        "question_code": {
+          "type": "string"
+        },
+        "additional_information": {
+          "type": "string"
+        }
+      }
+    },
+    "RetailerCourier": {
+      "type": "object",
+      "description": "Total Number of deliveries from the retailer grouped by Courier for week or month",
+      "properties": {
+        "logo": {
+          "type": "string"
+        },
+        "delivered": {
+          "type": "string"
+        },
+        "courier_company": {
+          "type": "string"
+        },
+        "not_delivered": {
+          "type": "string"
+        }
+      }
+    },
+    "EmailParser": {
+      "type": "object",
+      "properties": {
+        "extractors": {
+          "items": {
+            "$ref": "#/definitions/EmailExtractor"
+          },
+          "type": "array"
+        },
+        "repeat": {
+          "type": "boolean"
+        },
+        "position_extractor": {
+          "$ref": "#/definitions/EmailExtractor"
+        }
+      }
+    },
+    "CourierMappingArray": {
+      "items": {
+        "$ref": "#/definitions/CourierMapping"
+      },
+      "type": "array"
+    },
+    "401": {
+      "required": [
+        "correlationID"
+      ],
+      "type": "object",
+      "description": "Not authorized.  Either the authorization key was missing or not present",
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "correlationID": {
+          "type": "string"
+        }
+      }
+    },
+    "accountForgotPassword": {
+      "type": "object",
+      "description": "Forgotten password reset request",
+      "properties": {
+        "emailAddress": {
+          "type": "string",
+          "description": "The emailAddress to login with"
+        },
+        "resetToken": {
+          "type": "string",
+          "description": "The token provided on reset."
+        }
+      }
+    },
+    "EmailIntegrationConfiguration": {
+      "type": "object",
+      "properties": {
+        "from_email_addresses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parsing_set": {
+          "items": {
+            "$ref": "#/definitions/EmailParser"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "RetailerObject": {
+      "type": "object",
+      "description": "describes a retailer",
+      "properties": {
+        "retailer_attributes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "contact_phoneNumber": {
+          "type": "string"
+        },
+        "contact_firstName": {
+          "type": "string"
+        },
+        "seal_id": {
+          "type": "string"
+        },
+        "website_name": {
+          "type": "string"
+        },
+        "contact_emailAddress": {
+          "type": "string"
+        },
+        "seal_enabled": {
+          "type": "string"
+        },
+        "contact_lastName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "website_url": {
+          "type": "string"
+        }
+      }
+    },
+    "RetailerAttributeUpdate": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object",
+      "description": "Retailer Attributes (dictonary/map)"
+    },
+    "DeliveryDays": {
+      "type": "object",
+      "description": "Delivery of consignments for week or month days",
+      "properties": {
+        "deliverydate": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "delivered": {
+          "type": "string"
+        },
+        "not_delivered": {
+          "type": "string"
+        }
+      }
+    },
+    "PasswordReset": {
+      "required": [
+        "newPassword"
+      ],
+      "type": "object",
+      "description": "Set the users password",
+      "properties": {
+        "newPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "EmailExtractor": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "string"
+        },
+        "item": {
+          "type": "string"
+        },
+        "capture": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "swagger": "2.0",
+  "consumes": [
+    "application/json"
+  ]
+}

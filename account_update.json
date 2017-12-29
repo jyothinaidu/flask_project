@@ -1,0 +1,34 @@
+{
+  "accountAddress": {
+    "countryCode": "string",
+    "suburb": "string",
+    "state": "string",
+    "postcode": "string",
+    "address": "string"
+  },
+  "fullName": "string",
+  "installationInformation": {
+    "OSType": "string",
+    "OSMinorVersion": "string",
+    "DeviceIdentifier": "string",
+    "ApplicationVersion": "string",
+    "OSMajorVersion": "string"
+  },
+  "neighbourOptIn": "True/False", # False - if already neighbough, then start opting process (has pending, wait for completion else go silent)
+                                  # True - if not already neighbour, become one, or reset neighbour to "willing"
+
+}
+
+Retrieves an object describing application settings to apply to this users application installiation, this object is 'piggey backed' on this call
+The ApplicationSettings object includes
+
+ShowMessages : show/hide the messages icon (no messages until ready for neighbour collections)
+OfferNeighbourSignupInMenu : yes/no to offer neighbour signup in the SETTINGS menu
+PromptForNeighbourSignup : yes/no to show a neighbour signup prompt on My Deliveries
+      #This functionality is undefined
+IsTrustMileNeighbour : yes/no that this user has given permission to receive deliveries on behalf of others  
+        ## This setting controls if neighbour settings are shown in the consumer app
+        ## This setting will be true if - the neighbour is opted in OR if the neighbour is in the opting-out process
+
+Heartbeat : 0 (off) or greater, being the number of minutes between sending heartbeats to the server
+TrustMileFeedback : show / hide capture of feedback for TrustMile on feedback screen

@@ -1,0 +1,651 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.1.0"
+  title: Trust Mile Courier Application
+
+host: api.trustmile.com
+
+schemes:
+  - https
+  
+basePath: /courier/v1
+# Describe your paths here
+
+produces:
+  - application/json
+  
+consumes:
+  - application/json
+
+  
+securityDefinitions:
+  internalApiKey:
+    type: apiKey
+    in: header
+    name: X-courier-apiKey
+    
+paths:
+  
+  /login:
+    post:
+      description:
+        The username and password are validated.  
+        If sucessful an api key is returned which must be included
+        in the header of subsequent requests
+      parameters:
+        - name: LoginRequest
+          in: body
+          required: true
+          schema:
+            properties:
+              username:
+                type: string
+                description: The username to login with
+              password:
+                type: string
+                description: The password associated with the username
+              OSType:
+                type: string
+                description: 
+                  Android or Apple
+              OSMajorVersion:
+                type: string
+                description: The major version of the mobile OS
+              OSMinorVersion:
+                type: string
+                description: the minor version of the mobile OS
+              DeviceIdentifier:
+                type: string
+                description: the device ID of the mobile device
+              ApplicationVersion:
+                type: string
+                description: the version of the application installed, such as 1  or 1.1 or 1.1.1
+      responses:
+        200:
+          description: The login was sucessful
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                description: The API key used to validate subsequernt requests 
+              companyName:
+                type: string
+                description:  The name of the courier company this courier works for.
+        401:
+          description: login failed
+          schema:
+            properties:
+              correlationID:
+                type: string
+              reason:
+                type: string          
+
+  /login/password:
+    post:
+      security:
+        - internalApiKey: [] 
+      description:
+        used to update a couriers username and password
+      parameters:
+        - name: LoginRequest
+          in: body
+          required: true
+          schema:
+            properties:
+              password:
+                type: string
+                description: The users current password
+              newPassword: 
+                type: string
+                description: The new password for the user
+      responses:
+        200:
+          description: The password was sucessfully changed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The password did not match the users password.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: The password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+
+  /cards:
+    get:
+      description: Retereives a list of delivery cards.
+                    The default is to return the currently open cards
+                    The optionasl parameter 'history' will retereive a list of the last 50 deliveries within the last 3 months.
+                  
+      security:
+        - internalApiKey: []
+      parameters:
+      - name: GetHistory
+        in: body
+        required: false
+        schema:
+          properties:
+            history:
+              type: boolean
+              description: set to true to retereive historical cards
+      responses:
+        200:
+          description: an array of open delivery cards
+          schema:
+            properties:
+              correlationID:
+                  type: string
+              cards:
+                type: array
+                items:
+                  $ref: '#/definitions/card'
+        401:
+          $ref: '#/definitions/401'
+    post:
+      description:  creates a new delivery card
+      parameters:
+        - name: CreateCardRequest
+          in: body
+          schema:
+            properties:
+              latitude:
+                type: number
+                format: double
+                description: the GPS latitude of where the card was created
+              longitude:
+                type: number
+                format: double
+                description: the GPS longitude of where the card was created
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: returns the new deliveryID
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliveryID:
+                type: string
+                format: uuid
+        401:
+          $ref: '#/definitions/401'
+
+  /cards/{cardId}:
+    parameters:
+      - name: cardId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      description: returns the delivery card specified  and associated articles
+      security:
+        - internalApiKey: []
+      responses:      
+        200:
+          description: The delivery and associated parcels
+          schema:
+            properties:
+              correlationID:
+                type: string
+              delivery:
+                $ref: '#/definitions/card'
+              
+    delete:
+      description: cancels the use of trust mile for this delivery card
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: the deleivey card was cancelled
+          schema:
+            properties:
+              correlationID:
+                type: string              
+        401:
+          $ref: '#/definitions/401'
+
+    put:
+      description: sets the stage for this delivery card
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: stageId
+          in: body
+          required: true
+          schema:
+            properties:
+              stageID:
+                type: string
+                enum: [-1,0,1,2,3,4]
+      responses:
+        200:
+          description: the stage was sucessfuly 
+          schema:
+            properties:
+              correlationID:
+                type: string              
+        401:
+          $ref: '#/definitions/401'          
+
+  /cards/{cardID}/articles:
+    parameters:
+      - name: cardID
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      description: returns a list of articles associated with this delivery card
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of articles associated with this delivery card
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              parcels:
+                description: an array of articles that are in this delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        401:
+          $ref: '#/definitions/401'
+    post:
+      description: adds an article to this delivery card
+      security:
+        - internalApiKey: []
+      parameters:
+      - name: article
+        in: body
+        description: the description
+        required: true
+        schema:
+          properties:
+              trackingNumber:
+                type: string
+                description: the tracking number scanned in from a barcode or typed in.
+
+      responses:
+        200:
+          description: The parcel was added
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              parcels:
+                description: an array of articles that are in this delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        409:
+          description: a parcel with that tracking number and that item number already exists in an open delivery for this courier.
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              message:
+                type: string
+                description: The message to display to the user
+              parcels:
+                description: an array of articles that are in this delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        401:
+          $ref: '#/definitions/401'
+
+  /cards/{cardId}/articles/{trackingNumber}:
+    parameters:
+      - name: cardId
+        type: string
+        format: uuid
+        in: path
+        required: true
+      - name: trackingNumber
+        type: string
+        in: path
+        required: true
+    get:
+      description: retereives the article associated with this trackingnumber
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: The article associated with this trackingnumber
+          schema:
+            properties:
+                corrolationID:
+                  type: string
+                article:
+                  $ref: '#/definitions/article'
+        404:
+          description: either the deliveryID or trackingNumber was not found
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found
+        401:
+          $ref: '#/definitions/401'
+    delete:
+      description: deletes the article from the delivery card
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: the tracking number and parcels were deleted
+          schema:
+            properties:
+                corrolationID:
+                  type: string
+                articles:
+                  type: array
+                  items:
+                    $ref: '#/definitions/article'
+        404:
+          description: either the deliveryID or trackingNumber was not found
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found
+              articles:
+                description: a list of articles on the associated delivery card
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+                  
+        409:
+          description: the article could not be deleted as the card is in a state that prohibits the action, such as after the card has been handed over to an alternate recipient
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason 
+              articles:
+                description: a list of articles on the associated delivery card
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        401:
+          $ref: '#/definitions/401'
+            
+
+  /cards/{cardId}/alternateRecipient:
+    parameters:
+      - name: cardId
+        in: path
+        type: string
+        required: true
+        description: the card that we wich to get alternate recipients for or set alternate recipients on
+
+    get:
+      description: Retereives a list of alternate recipients for the supplied cardId.  THe GPS coordinates where stored against the card when the card was created
+      security:
+        - internalApiKey: []
+
+      responses:
+        200:
+          description: alternate recipient response
+          schema:
+            properties:
+              correlationID:
+                type: string
+              alternateRecipients:
+                description: an array of alternate recipients, ordered by proximity to the GPS coordinates stored against the card
+                type: array
+                items:
+                  $ref: '#/definitions/alternateRecipient'
+        404:
+          description: the cardID was not found
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason                 
+        401:
+          $ref: '#/definitions/401'                  
+    put:
+      description:
+        sets the alternate recipient for this card
+      parameters:
+        - name: SetAlternateRecipient
+          in: body
+          schema:
+            properties:
+              alternateRecipientId:
+                type: string
+      responses:
+        200:
+          description:
+            The alternate recipient was set
+          schema:
+            properties:
+              correlationID:
+                type: string        
+        404:
+          description: either the cardID or alternate recipient id was not found
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason, indicating if the cardID or alternateRecipientId was not found                             
+        401:
+          $ref: '#/definitions/401' 
+    delete:
+      description: |
+              removes the alternate recipient from this card 
+              Logic - 
+              If handover is not in progress then the handover can be aborted. If it can be aborted then set Stage of the app to 4 and respond with list of *Instruction* that is either - 
+               
+              (a) 
+              
+              	**Courier Action**: One or more parcels need to have a failure card written. 
+              	**System Response**: AllowChangeAR: No, Message: _(ignore)_, Set stage = 4
+              	**When this is returned**:  
+              		- a delivery card has been written and left for the intended recipient
+              			AND the following
+              		- The parcels were not added to TrustMile by a Retailer OR
+              		- The intended recipient is not part of trustMile OR
+              		- The delivery address is different from the intended recipients address
+              (b)
+              
+                **Courier Action**: The courier may choose a different alternate recipient. The TrustMile system will notify the intended recipient of the new address  
+              	**System Response**: AllowChangeAR: Yes, Message: _the instructions to display to the courier_, set stage = 1
+              	**When this is returned**: 
+              		- a delivery card has been written and left for the intended recipient
+              			AND the following
+              		- The parcels were added to TrustMile by a Retailer AND
+              		- The intended recipient is part of trustMile AND
+              		- The delivery address is the same as the intended recipients address
+               
+              (c) 
+              
+              	**Courier Action**: Continue the handover.
+              	
+              	**System Response**: Failure (status code 409), Message: "The handover is already in progress and you cannot abort it".
+              	
+              	**When this is returned**: 
+              		- The Alternate Recipient has scanned in one or more items.
+               
+              (d)
+              
+              	**Courier Action**[:] The courier may choose a different alternate recipient, and leave a delivery card for the intended recipient
+              	
+              	**System Response**: AllowChangeAR: No, Message: _(ignore)_, set stage = 1
+              	
+              	**When this is returned**:
+              		- The handover is not in progress
+              	
+              The request *Reason* field is there for the future. For now it is assumed the handover is aborted because the neighbour is not home. The server should store the reason.  
+
+      responses:
+        200:
+          description: the alternate recipient was sucessfuly removed from the card
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              AllowChangeAlternateRecipient:
+                type: boolean
+              Message:
+                type: string
+        404:
+          description: the cardID was not found
+          schema:
+            properties:
+              corrolationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason
+                
+        401:
+          $ref: '#/definitions/401'           
+definitions:
+  card:
+    properties:
+      cardID:
+        type: string
+        format: uuid
+      articles:
+        type: array
+        items: 
+          $ref: '#/definitions/article'
+      alternateRecipient:
+          $ref: '#/definitions/alternateRecipient'
+      stage:
+        $ref: '#/definitions/stage'
+    required:
+      - 'cardID'
+      - 'stage'
+  article:
+    description: A single physical article.  Consists of a tracking number and an item number, for cases where a TrackingNumber consists of several parcels.
+    properties:
+      trackingNumber:
+        type: string
+      recipientName:
+        type: string
+      recipientAddress:
+        $ref: '#/definitions/physicalAddress'
+      orderNumber:
+        type: string
+      retailer:
+        $ref: '#/definitions/retailer'
+      handoverState:
+        type: string
+        enum: 
+          - ""
+          - "Handed Over"
+          - "Rejected"
+    required:
+      - 'trackingNumber'
+  alternateRecipient:
+    properties:
+      name:
+        description: the name of the recipient
+        type: string
+      alternateRecipientId:
+        type: string
+        description: the Id of the alternate recipient
+      physicalAddress:
+        $ref: '#/definitions/physicalAddress'
+    required:
+      - 'name'
+      - 'physicalAddress'
+  physicalAddress:
+    properties:
+      latitude:
+        description: the latitude of the recipient
+        type: number
+        format: double
+      longitude: 
+        description: the longitude of the recipient
+        type: number
+        format: double
+      unitNumber: 
+        type: string
+      streetNumber:
+        type: string
+      streetName:
+        type: string
+      streetType:
+        type: string
+      suburb:
+        type: string
+      postcode:
+        type: string
+        pattern: '^[0-9]{4}$'
+  retailer:
+    properties:
+      name:
+        type: string
+      contactNumber:
+        type: string
+  stage:
+    description: |
+      stage the delivery is at
+      Stages:
+       
+      -1: Delete credentials and return to login screen.
+      0 : NO DELIVERY SESSION (show list of actives).
+      1 : Currently scanning parcels.
+      2 : Neighbour selected for a delivery.
+      3 : Neighbour delivery in progress.
+      4 : Neighbour delivery aborted.
+    properties:
+      stageID:
+        type: integer
+        minimum: -1
+        maximum: 4
+        enum: [-1,0,1,2,3,4]
+      name:
+        type: string
+      description:
+        type: string
+    required:
+      - stageID
+      - name
+      - description
+
+  
+        
+  401:
+    description: Not authorized.  Either the authorization key was missing or not present
+    properties:
+      correlationID:
+        type: string
+      reason:
+        type: string
+        enum: 
+            [ 'Authorization key invalid', 'X-courier-apiKey header not present']  
+

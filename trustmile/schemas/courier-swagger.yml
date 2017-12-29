@@ -1,0 +1,630 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.1.1"
+  title: Trust Mile Courier Application
+
+host: api.trustmile.com
+
+schemes:
+  - https
+
+basePath: /courier/v1
+# Describe your paths here
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+
+securityDefinitions:
+  internalApiKey:
+    type: apiKey
+    in: header
+    name: X-courier-apiKey
+
+paths:
+
+  /account:
+    get:
+      tags:
+        - account
+      description: |
+        ## Service: Check Signup, Get Account.
+        ** works **
+
+        Returs the users account, including if the email addres has been verified.
+
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: the status of an account
+          schema:
+            properties:
+              correlationID:
+                type: string
+              account:
+                $ref: '#/definitions/Account'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+    # put:
+    #   description: |
+    #     ## Service: Save Details
+
+    #     Sets a users name and home address.
+
+    #   security:
+    #     - internalApiKey: []
+    #   parameters:
+    #     - name: UpdateAccountRequest
+    #       in: body
+    #       required: true
+    #       schema:
+    #         $ref: "#/definitions/AccountUpdate"
+
+    #   responses:
+    #     '200':
+    #       description: the details were saved
+    #       schema:
+    #         properties:
+    #           correlationID:
+    #             type: string
+    #     '422':
+    #       description: verification failed.  Missing field, etc
+    #       schema:
+    #         properties:
+    #           correlationID:
+    #             type: string
+    #           message:
+    #             type: string
+    #     '401':
+    #       description: Unauthorized
+    #       schema:
+    #         $ref: '#/definitions/401'
+    delete:
+      tags:
+        - account
+      description: |
+        ## Service: Reset Signup
+        ** not implemented **
+
+        Allows a user to delete their account.  Currently only supported 
+        when the email address has not been verified.
+
+        The account to delete is based on the apiKey.  After this call 
+        the apiKey is invalidated.
+
+        ## [status: not implemented]
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: the account was deleted
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '409':
+          description: the email address on the account is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /login:
+    post:
+      tags:
+        - account
+      description: |
+        ## __Service: Login__
+        ** works ** 
+        Logs a courier in to their account and returns the API key to be used in subsequent requests.  Returns the status of the users email verification via the 'account' object
+      parameters:
+        - name: LoginRequest
+          in: body
+          description: Courier login credentials
+          required: true
+          schema:
+            $ref: '#/definitions/Login'
+      responses:
+        '200':
+          description: the login was sucessful.  The courier's 'account'
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid
+              userId:
+                type: string
+                format: uuid
+        '403':
+          description: username or password incorrect
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /login/password:
+    post:
+      tags:
+        - account
+      security:
+        - internalApiKey: []
+      description: |
+        ** works **
+
+        used to update a couriers username and password
+      parameters:
+        - name: LoginRequest
+          in: body
+          required: true
+          schema:
+            properties:
+              password:
+                type: string
+                description: The users current password
+              newPassword:
+                type: string
+                description: The new password for the user
+      responses:
+        200:
+          description: The password was sucessfully changed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The password did not match the users password.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: The password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /logout:
+    post:
+      tags:
+        - account
+      security:
+        - internalApiKey: []
+      description:
+        used to log out
+        ** works **        
+      responses:
+        200:
+          description: User was logged out
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+
+
+  /deliveries:
+    get:
+      tags:
+        - deliveries
+      description: Retrieves a list of deliveries.
+                    ** works, no history yet **
+                    The default is to return the currently open deliveries
+                    The optionasl parameter 'history' will get a list of the last 50 deliveries within the last 3 months.
+      security:
+        - internalApiKey: []
+      parameters:
+      - name: GetHistory
+        in: body
+        required: false
+        schema:
+          properties:
+            history:
+              type: boolean
+              description: set to true to retereive historical deliveries
+      responses:
+        200:
+          description: an array of open delivery deliveries
+          schema:
+            properties:
+              correlationID:
+                  type: string
+              deliveries:
+                type: array
+                items:
+                  $ref: '#/definitions/Delivery'
+        401:
+          $ref: '#/definitions/401'
+
+    post:
+      tags:
+        - deliveries
+      description:  creates a new trustmile delivery event. The state of the TrustmileDelivery will be TRANSIT_TO_NEIGHBOUR
+        ** works **
+      parameters:
+        - name: CreateTrustmileDelivery
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateDelivery'
+
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: returns the new deliveryID
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliveryID:
+                type: string
+                format: uuid
+        401:
+          $ref: '#/definitions/401'
+
+
+  /deliveries/state/{deliveryState}:
+
+    get:
+      tags:
+        - deliveries
+      description: Retrieves a list of deliveries with a given state
+
+      security:
+        - internalApiKey: []
+      parameters:
+      - name: deliveryState
+        in: path
+        required: true
+        type: string
+        enum:
+          - NEWLY_CREATED
+          - TRANSIT_TO_NEIGHBOUR
+          - NEIGHBOUR_RECEIVED
+          - RECIPIENT_RECEIVED
+          - ABORTING
+          - NEIGHBOUR_ABORTED
+          - COURIER_ABORTED
+          - CANCELLED
+          - RECIPIENT_ARCHIVED
+          - TIME_ARCHIVED
+
+      responses:
+        200:
+          description: an array of deliveries
+          schema:
+            properties:
+              correlationID:
+                  type: string
+              deliveries:
+                type: array
+                items:
+                  $ref: '#/definitions/Delivery'
+        401:
+          $ref: '#/definitions/401'
+
+  /deliveries/{deliveryId}:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: returns the delivery specified and associated articles
+        ** works **
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: The delivery and associated parcels
+          schema:
+            properties:
+              correlationID:
+                type: string
+              delivery:
+                $ref: '#/definitions/Delivery'
+
+    
+    delete:
+      tags:
+        - deliveries
+      description: cancels the use of trust mile for this delivery
+      security:
+         - internalApiKey: []
+      responses:
+        200:
+          description: the delivery was cancelled
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+           $ref: '#/definitions/401'
+
+
+    # james: Delivery states see courier_operations.DeliveryState
+    put:
+      tags:
+        - deliveries
+      description: sets the state for this delivery. States are
+                    NEWLY_CREATED
+                    TRANSIT_TO_NEIGHBOUR
+                    NEIGHBOUR_RECEIVED
+                    RECIPIENT_RECEIVED
+                    ABORTING
+                    NEIGHBOUR_ABORTED
+                    COURIER_ABORTED
+                    CANCELLED
+                    RECIPIENT_ARCHIVED
+                    TIME_ARCHIVED
+        ** works **
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: deliveryState
+          in: body
+          required: true
+          schema:
+            properties:
+              deliveryState:
+                type: string
+                enum:
+                  - NEWLY_CREATED
+                  - TRANSIT_TO_NEIGHBOUR
+                  - NEIGHBOUR_RECEIVED
+                  - RECIPIENT_RECEIVED
+                  - ABORTING
+                  - NEIGHBOUR_ABORTED
+                  - COURIER_ABORTED
+                  - CANCELLED
+                  - RECIPIENT_ARCHIVED
+                  - TIME_ARCHIVED
+
+        - name: neighbourId
+          in: body
+          schema:
+            properties:
+              neighbourId:
+                type: uuid
+
+      responses:
+        200:
+          description: the state was set correctly
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'
+
+
+
+  /deliveries/{deliveryId}/articles/:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: returns a list of articles associated with this delivery
+        ** works **
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of articles associated with this delivery
+          schema:
+            properties:
+              correlationID:
+                type: string
+              parcels:
+                description: an array of articles that are in this delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        401:
+          $ref: '#/definitions/401'
+    post:
+      tags:
+        - deliveries
+      description: adds an article to this delivery
+        ** works **
+      security:
+        - internalApiKey: []
+      parameters:
+      - name: article
+        in: body
+        description: the description
+        required: true
+        schema:
+          properties:
+              trackingNumber:
+                type: string
+                description: the tracking number scanned in from a barcode or typed in.
+
+      responses:
+        200:
+          description: The parcel was added
+          schema:
+            properties:
+              correlationID:
+                type: string
+              parcels:
+                description: an array of articles that are in this delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        409:
+          description: a parcel with that tracking number and that item number already exists in an open delivery for this courier.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+                description: The message to display to the user
+              parcels:
+                description: an array of articles that are in this delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        401:
+          $ref: '#/definitions/401'
+
+  /articles/{trackingNumber}:
+    parameters:
+      - name: trackingNumber
+        type: string
+        in: path
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: get article for tracking number (NB. this assumes it that trackingnumber 1-1 on article.)
+        ** works **
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: The article associated with this trackingnumber
+          schema:
+            properties:
+                correlationID:
+                  type: string
+                article:
+                  $ref: '#/definitions/article'
+        404:
+          description: either the deliveryID or trackingNumber was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found
+        401:
+          $ref: '#/definitions/401'
+    delete:
+      tags:
+        - deliveries
+      description: deletes the article from the delivery
+        ** works **
+        removes delivery info from article, article record left intact
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: the tracking number and parcels were deleted
+          schema:
+            properties:
+                correlationID:
+                  type: string
+                articles:
+                  type: array
+                  items:
+                    $ref: '#/definitions/article'
+        404:
+          description: either the deliveryID or trackingNumber was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason, indicating if the deliveryID or trackingNumber was not found
+              articles:
+                description: a list of articles on the associated delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+
+        409:
+          description: the article could not be deleted as the delivery is in a state that prohibits the action, such as after the delivery has been handed over to an alternate recipient
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason
+              articles:
+                description: a list of articles on the associated delivery
+                type: array
+                items:
+                  $ref: '#/definitions/article'
+        401:
+          $ref: '#/definitions/401'
+
+  /nearestNeighbours/{latitude}/{longitude}:
+    parameters:
+      - name: latitude
+        in: path
+        type: number
+        format: double
+        required: true
+      - name: longitude
+        type: number
+        format: double
+        in: path
+        required: true
+    get:
+      tags:
+        - location
+      description: Retrieves a list of alternate near the courier's location.
+        ** works **
+        distance calculation needs work
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: alternate recipient response
+          schema:
+            properties:
+              correlationID:
+                type: string
+              alternateRecipients:
+                description: an array of alternate recipients, ordered by proximity to the GPS coordinates stored against the delivery
+                type: array
+                items:
+                  $ref: '#/definitions/UserInfo'
+        404:
+          description: No neighbours found
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+                description: a text description of the failure reason
+        401:
+          $ref: '#/definitions/401'
+
+definitions:
+  $include: 'definitions.yml'
+

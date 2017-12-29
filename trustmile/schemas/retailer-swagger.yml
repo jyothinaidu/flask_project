@@ -1,0 +1,788 @@
+ # Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "1.0"
+  title: Trust Mile Admin Interface
+
+  description: |
+    Describes the API that allows administrative functions.
+    Primarily dsigned to be used to allow the .NET website server to communicate with the python API backend
+
+    ## correlationID
+      This parameter is returned with every request.
+
+      The intent is that the server side will generate a unique id for each request, and feature this ID in all logging that occurs.  This will allow us to very easily to resolve issues faced consumers of the API.  When questioned with 'Why didn't this work' or 'This isn't working correctly' - we can identify the request server-side and easily identify events on the server associated with that request.
+
+      My intent is to generate a log/trace of every request
+
+    ## security
+      Requests will be secured with the X-admin-apiKey.  This will be a fixed secret shared key.
+
+    ## logon / logoff / sessions
+      There will be no logon or log off operations
+
+host: 127.0.0.1:5001
+
+schemes:
+  - https
+
+basePath: /retailer
+# Describe your paths here
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+
+securityDefinitions:
+  internalApiKey:
+    type: apiKey
+    in: header
+    name: X-retailer-apiKey
+
+
+
+paths:
+
+#account management (login, register, update, change password)
+  /account/login:
+    post:
+      tags:
+        - account
+      description: |
+        ## __Service: Login__
+        Logs a retailer in to their account and returns the API key to be used in subsequent requests.
+      parameters:
+        - name: body
+          in: body
+          description: User login credentials
+          required: true
+          schema:
+            $ref: '#/definitions/RetailerLogin'
+      responses:
+        '200':
+          description: the login was sucessful.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid
+
+        '403':
+          description: username or password incorrectmaps
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/register:
+    post:
+      tags:
+          - account
+      description: |
+        ## Service: Signup
+
+        Creates a new retailer account and logs in the retailer. Returns an apiKey to be used in subsequent requests.
+
+        After signup the user will be unable to proceed until their email address is verified.  The users device information is caputired at this stage.
+
+      parameters:
+        - name: body
+          in: body
+          description: Registration / signup
+          required: true
+          schema:
+            "$ref": "#/definitions/RetailerRegister"
+      responses:
+        '200':
+          description: account created
+          schema:
+            properties:
+              correlationID:
+                type: string
+              apiKey:
+                type: string
+                format: uuid
+        '409':
+          description: username already exists
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the email address, website name, or website URL alread exists
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/forgotPassword:
+    post:
+      tags:
+          - account
+      description: |
+        ## Service: Forgot Password
+
+        Triggers an reset password email to be sent to the supplied email address.
+        ** Impelemtned **
+      parameters:
+        - name: body
+          in: body
+          description: bob
+          required: true
+          schema:
+            "$ref": "#/definitions/accountForgotPassword"
+
+      responses:
+        '200':
+          description: a reset password link was sent to the email address
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+        '404':
+          description: the email address was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+
+  /account:
+    get:
+      tags:
+        - account
+      description: |
+        ## Service: Check Signup, Get Account.
+
+        Returs the users account, including if the email addres has been verified.
+
+        ** Implemented **
+
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: the status of an account
+          schema:
+            properties:
+              correlationID:
+                type: string
+              retailer:
+                $ref: '#/definitions/RetailerObject'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+    post:
+      tags:
+        - account
+      description: |
+        Updates a users details
+
+        ** Implemented **
+
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/RetailerUpdate"
+
+      responses:
+        '200':
+          description: the details were saved
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: verification failed.  Missing field, etc
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /account/attributes:
+    post:
+      tags:
+        - account
+      description: |
+        Updates the retailers attributes
+
+        This overwrites ALL attributes, so be careful.
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/RetailerAttributeUpdate'
+      responses:
+        '200':
+          description: The
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '403':
+          description: the supplied current password did not match the users current password
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the new password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+
+
+  /account/password:
+    post:
+      tags:
+        - account
+      description: |
+        ## Service: Set Login
+
+        Allows a user to change their password.
+        ** Implemented **
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordUpdate'
+      responses:
+        '200':
+          description: the password was changed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '403':
+          description: the supplied current password did not match the users current password
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the new password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /account/resetPassword/{resetToken}:
+    parameters:
+      - name: resetToken
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - account
+      description: |
+        Validates a token and returns the email address associated with this token
+        ** Implemented **
+      responses:
+        '200':
+          description: The token is valid.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailAddress:
+                type: string
+
+        '404':
+          description: the token was not found (incorrect, expired, etc)
+          schema:
+            properties:
+              correlationID:
+                type: string
+    post:
+      tags:
+          - account
+      description: Sets the users password to that supplied
+                   ** Implemented**
+                   Jorourke  Needed
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordReset'
+      responses:
+        '200':
+          description: The password was set.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailAddress:
+                type: string
+
+        '404':
+          description: the token was not found (incorrect, expired, etc)
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '422':
+          description: the new password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /ping:
+    get:
+      responses:
+        '200':
+          description: Ping Sucessful
+        '401':
+          description: Invalid API Key
+          schema:
+            $ref: '#/definitions/401'
+
+
+  /account/seal-audit:
+    get:
+      responses:
+        '200':
+          description: seal audit answers
+          schema:
+            properties:
+              correlationID:
+                type: string
+              seal_audits:
+                type: array
+                items:
+                  $ref: '#/definitions/RetailerSealAudit'
+        '401':
+          description: Invalid API Key
+          schema:
+            $ref: '#/definitions/401'
+    post:
+      description: Sets the audit answers, replacing all existing details
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/RetailerSealAuditArray'
+      responses:
+        '200':
+          description: Audit answers were updated.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailAddress:
+                type: string
+
+  /account/courier-mapping:
+    get:
+      responses:
+        '200':
+          description: get courier mappings
+          schema:
+            properties:
+              correlationID:
+                type: string
+              courier_mappings:
+                $ref: '#/definitions/CourierMappingArray'
+        '401':
+          description: Invalid API Key
+          schema:
+            $ref: '#/definitions/401'
+    post:
+      description: Sets the audit answers, replacing all existing details
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CourierMappingArray'
+      responses:
+        '200':
+          description: Audit answers were updated.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailAddress:
+                type: string
+
+  /account/deliveries/retailerintegration:
+    post:
+      description: Adds a retailer integration delivery to consumer if the delivery is not existing and send a email notification to the user
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AddDelivery'
+      responses:
+        '200':
+          description: Audit answers were updated.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailAddress:
+                type: string
+
+  /account/deliveries/courier/{weekorMonth}:
+    parameters:
+      - name: weekorMonth
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      responses:
+        '200':
+          description: Total Number of deliveries from the retailer grouped by courier over the same date range for week or month
+          schema:
+            properties:
+              correlationID:
+                type: string
+              retailer:
+                type: array
+                items:
+                  $ref: '#/definitions/RetailerCourier'
+        '404':
+          description: deliveries not found from the retailer grouped by courier over the same date range
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+  /account/deliveries/day/{weekorMonth}:
+    parameters:
+      - name: weekorMonth
+        in: path
+        type: string
+        format: uuid
+        required: true
+    get:
+      tags:
+        - deliveries
+      description: |
+        ##Service: GetDeliveriesfordays
+
+        Retrieves the tracking information for a delivery.
+      security:
+        - internalApiKey: []
+      responses:
+        '200':
+          description: Deliveries for week or month.
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliverydays:
+                type: array
+                items:
+                  $ref: '#/definitions/DeliveryDays'
+        '404':
+          description: deliveries not found for the specified days, or the user does not have permission to view the tracking for these deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/401'
+
+
+definitions:
+
+  401:
+    type: object
+    required:
+      - correlationID
+    description: Not authorized.  Either the authorization key was missing or not present
+    properties:
+      correlationID:
+        type: string
+      reason:
+        type: string
+
+  RetailerRegister:
+    type: object
+    properties:
+      website_name:
+        type: string
+      website_url:
+        type: string
+      contact_firstname:
+        type: string
+      contact_lastname:
+        type: string
+      contact_emailAddress:
+        type: string
+      contact_password:
+        type: string
+      contact_phoneNumber:
+        type: string
+
+
+  RetailerObject:
+    type: object
+    description: describes a retailer
+    properties:
+      id:
+        type: string
+      website_name:
+        type: string
+      website_url:
+        type: string
+      contact_firstName:
+        type: string
+      contact_lastName:
+        type: string
+      contact_phoneNumber:
+        type: string
+      contact_emailAddress:
+        type: string
+      seal_id:
+        type: string
+      seal_enabled:
+        type: string
+      retailer_attributes:
+        type: object
+        additionalProperties:
+          type: string
+
+  RetailerAttributeUpdate:
+    type: object
+    description: Retailer Attributes (dictonary/map)
+    additionalProperties:
+      type: string
+
+  RetailerUpdate:
+    type: object
+    description: Retailer account fields that can be updated
+    properties:
+      website_name:
+        type: string
+      website_url:
+        type: string
+      contact_firstname:
+        type: string
+      contact_lastname:
+        type: string
+      contact_phone:
+        type: string
+      contact_emailaddress:
+        type: string
+
+
+  CourierMappingArray:
+    type: array
+    items:
+      $ref: '#/definitions/CourierMapping'
+
+  CourierMapping:
+    type: object
+    properties:
+      sourceText:
+        type: string
+      courierName:
+        type: string
+
+  EmailIntegrationConfiguration:
+    type: object
+    properties:
+      from_email_addresses:
+        type: array
+        items:
+          type: string
+      parsing_set:
+        type: array
+        items:
+          $ref: '#/definitions/EmailParser'
+
+  EmailParser:
+    type: object
+    properties:
+      position_extractor:
+        $ref: '#/definitions/EmailExtractor'
+      repeat:
+        type: boolean
+      extractors:
+        type: array
+        items:
+          $ref: '#/definitions/EmailExtractor'
+
+
+  EmailExtractor:
+    type: object
+    properties:
+      start:
+        type: string
+      capture:
+        type: string
+      end:
+        type: string
+      item:
+        type: string
+      repeat:
+        type: boolean
+
+
+
+
+  RetailerLogin:
+    type: object
+    description: Required data for user login
+    properties:
+      emailAddress:
+        type: string
+        description: The emailAddress to login with
+      password:
+        type: string
+        description: The password associated with the username
+
+
+  PasswordUpdate:
+    type: object
+    required:
+      - oldPassword
+      - newPassword
+    description: Change the users password
+    properties:
+      oldPassword:
+        type: string
+      newPassword:
+        type: string
+
+  PasswordReset:
+    type: object
+    required:
+      - newPassword
+    description: Set the users password
+    properties:
+      newPassword:
+        type: string
+
+  accountForgotPassword:
+    type: object
+    description: Forgotten password reset request
+    properties:
+      emailAddress:
+        type: string
+        description: The emailAddress to login with
+      resetToken:
+        type: string
+        description: The token provided on reset.
+
+
+  RetailerSealAuditArray:
+    type: array
+    description: array of RetailerSealAudit
+    items:
+      $ref: '#/definitions/RetailerSealAudit'
+
+  RetailerSealAudit:
+    type: object
+    description: Gets and sets seal audit information
+    properties:
+      question_code:
+        type: string
+      question_text:
+        type: string
+      answer:
+        type: boolean
+      additional_information:
+        type: string
+
+  AddDelivery:
+    type: object
+    required:
+      - courierSlug
+      - trackingNumber
+      - description
+      - purchasedFrom
+      - emailAddress
+    description: The tracking number and courier slug for a given parcel required to be added to the user's account. Retailer Name is optional
+    properties:
+      description:
+        type: string
+      courierSlug:
+        type: string
+      trackingNumber:
+        type: string
+      purchasedFrom:
+        type: string
+      emailAddress:
+        type: string
+
+  RetailerCourier:
+    type: object
+    description: Total Number of deliveries from the retailer grouped by Courier for week or month
+    properties:
+      courier_company:
+        type: string
+      delivered:
+        type: string
+      not_delivered:
+        type: string
+      logo:
+        type: string
+
+  DeliveryDays:
+    type: object
+    description: Delivery of consignments for week or month days
+    properties:
+      deliverydate:
+        type: string
+        format: datetime
+      delivered:
+        type: string
+      not_delivered:
+        type: string

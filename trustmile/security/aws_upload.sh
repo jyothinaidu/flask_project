@@ -1,0 +1,1 @@
+aws --profile trustmile iam upload-server-certificate --server-certificate-name trustmile_wildcard_cert_chained --certificate-body file://tm-wc-cert.crt --private-key file://tm-wildcard-privkey.pem  --certificate-chain file://gd_bundle-g2-g1.crt

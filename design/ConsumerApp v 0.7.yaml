@@ -1,0 +1,811 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.1.0"
+  title: Trust Mile Consumer Application
+
+host: api.trustmile.com
+
+schemes:
+  - https
+  
+basePath: /consumer/v1
+# Describe your paths here
+
+produces:
+  - application/json
+  
+consumes:
+  - application/json
+
+  
+securityDefinitions:
+  internalApiKey:
+    type: apiKey
+    in: header
+    name: X-consumer-apiKey
+    
+paths:
+  /account/login:
+    post:
+      parameters:
+        - name: LoginRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              emailAddress:
+                type: string
+                description: The emailAddress to login with
+              password:
+                type: string
+                description: The password associated with the username
+              OSType:
+                type: string
+                description: 
+                  Android or Apple
+              OSMajorVersion:
+                type: string
+                description: The major version of the mobile OS
+              OSMinorVersion:
+                type: string
+                description: the minor version of the mobile OS
+              DeviceIdentifier:
+                type: string
+                description: the device ID of the mobile device
+              ApplicationVersion:
+                type: string
+                description: the version of the application installed, such as 1  or 1.1 or 1.1.1
+      responses:
+        200:
+          description: the login was sucessful
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: username or password incorrect
+          schema:
+            properties:
+              correlationID:
+                type: string
+
+  /account/register:
+    post:
+      description: creates a new user account
+      parameters:
+        - name: RegisterRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              emailAddress: 
+                type: string
+                format: email
+              password:
+                type: string
+      responses:
+        200:
+          description: account created
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: username already exists
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the username was not an email address or the password failed complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+  
+  /account/forgotPassword:
+    post:
+      parameters:
+        - name: ForgotPasswordRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              emailAddress:
+                type: string
+                format: email
+      responses:
+        200:
+          description: a reset password link was sent to the email address
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the email address was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+  
+  /account/verifyEmail:
+    put:
+      description: resends the verification email
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: email was sent
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: the email address is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+  /account:
+    get:
+      description:  Returs the status of the accout, e.g email verified
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: the status of an account
+          schema:
+            properties:
+              correlationID:
+                type: string
+              emailVerified:
+                type: boolean
+        401:
+          $ref: '#/definitions/401'  
+    put:
+      description:  sets a users name and home address
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: UpdateAccountRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              fullName:
+                type: string
+              address:
+                type: string
+              suburb:
+                type: string
+              state:
+                type: string
+              postcode:
+                type: string
+              countryCode:
+                type: string
+              latitude:
+                description: the latitude of the recipient
+                type: number
+                format: double
+              longitude: 
+                description: the longitude of the recipient
+                type: number
+                format: double              
+      responses:
+        200:
+          description: the details were saved
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: verification failed.  Missing field, etc
+          schema:
+            properties:
+              correlationID:
+                type: string
+              message:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    delete:
+      description:  Allows a user to delete their account.  Currently only supported when the email address has not been verified
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: the account was deleted
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: the email address on the account is already verified
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+          
+  /account/password:
+    post:
+      description: allows a user to change their password
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: UpdateAccountRequest
+          in: body
+          description: bob
+          required: true
+          schema:
+            properties:
+              password:
+                type: string
+              newPassword:
+                type: string
+      responses:
+        200:
+          description: the password was changed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: the supplied current password did not match the users current password
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the new password did not meet complexity requirements
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  
+#deliveries
+  /deliveries/findDelivery/{trackingNumber}:
+    parameters:
+      - name: trackingNumber
+        in: path
+        type: string
+    get:
+      description: Finds a delivery so that it can be added to the users account
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of possible deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+              deliveries:
+                type: array
+                items:
+                  $ref: '#/definitions/FindDeliveriesResponse'
+        404:
+          description: the tracking number was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /deliveries/findCard/{trackingNumber}:
+    parameters:
+      - name: trackingNumber
+        in: path
+        type: string
+    get:
+      description: Finds a delivery so that it can be added to the users account
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of possible deliveries
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the tracking number was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /deliveries:
+    post:
+      description: adds a delivery to the users delivery list. Requires either the deliveryId returned from /deliveries/findDeliveries, the trackingNumber user supplied and the courierSlug or the cardId from /delivery/findCards
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: AddDeliveryRequest
+          in: body
+          schema:
+            properties:
+              deliveryId:
+                type: string
+              cardId:
+                type: string
+              trackingNumber:
+                type: string
+              courierSlug:
+                type: string
+
+      responses:
+        200:
+          description: the delivery was added
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the delivery was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        400:
+          description: A required field was not supplied
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+          
+    get:
+      description: reterives a list of deliveries
+      responses:
+        200:
+          description: the list of deliveries, may be empty
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    
+  /deliveries/{deliveryId}/tracking:
+    parameters:
+      - name: deliveryId
+        in: path
+        type: string    
+    get:
+      description: retereives the tracking information for a delivery
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: an ordered list of tracking evets
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the deliveryId was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /conversations:
+    get:
+      description: reterives a list of conversations for this user
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of conversations, this may be empty
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    post:
+      description: starts a new conversation
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: delivery
+          in: body
+          schema:
+            properties:
+              deliveryId:
+                type: string
+                
+      responses:
+        200:
+          description: a new conversation was created
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: the user is not authorised to create a conversation for this deliveryId
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the deliveryId is empty
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: there is already a conversation for this deliveryId that the user can participate in.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /conversations/{conversationId}:  
+    parameters:
+      - name: conversationId
+        in: path
+        type: string    
+    get:
+      description: retereives an array of all the messages in this conversation.  This will also mark the messages as being read by the recipient
+      responses:
+        200:
+          description: the messages
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the conversationId was not foun
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    post:
+      description: sends a message on the conversation
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: SendMessageRequest
+          in: body
+          required: true
+          schema:
+            properties:
+              message:
+                type: string
+      responses:
+        200:
+          description: the message was sent 
+          schema:
+            properties:
+              correlationID:
+                type: string
+        400:
+          description: the message has not supplied any content
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the conversation was not found
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /cards/neighbour/{neighbourId}:
+    parameters:
+      - name: neighbourId
+        in: path
+        type: string   
+    get:
+      description:  Called by a recipient.  Returns a list of articles to be picked up from a neighobour and their state.
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of cards & articles articles and their state
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: the user does not have any articles to pickup from this neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the neighbourId does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    
+  /cards/neighbour/{neighbourId}/feedback:
+    parameters:
+      - name: neighbourId
+        in: path
+        type: string   
+    post:
+      description:  Called by a recipient.  leaves feedback about their pickup experiance
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: SendFeedbackRequest
+          in: body
+          schema:
+            properties:
+              neighbourRating:
+                type: number
+                format: integer
+                enum: [1,2,3,4,5]
+              neighbourComment:
+                type: string
+              trustMileRating:
+                type: number
+                format: integer
+                enum: [1,2,3,4,5]
+              trustMileComment:
+                type: string
+                
+      responses:
+        200:
+          description: the feedback was left
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: the user has not had any pickups from this neighbour
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the neighbourId does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the feedback did not match validation (field left black, etc)
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /cards/receiver/{cardId}:
+    parameters:
+      - name: cardId
+        in: path
+        type: string   
+    get:
+      description:  returns all the articles to be picked up by the receiver identified by this card.  Where it is know that the receiver has 2 or more cards to pickup, this call will return all of those.
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description: a list of cards and their articles
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    put:
+      description:  Used by the neighbour to set the ID credentials for a receiver
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: SetReceiverIDRequest
+          in: body
+          schema:
+            properties:
+              receiverName:
+                type: string
+              
+      responses:
+        200:
+          description: the ID was set sucessfully
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+
+  /cards/receiver/{cardId}/articles:
+    parameters:
+      - name: cardId
+        in: path
+        type: string   
+    post:
+      description: used by a neighbour to 'hand off' an article to a receiver
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: HandoffArticleRequest
+          in: body
+          schema:
+            properties:
+              articleID:
+                type: string
+      responses:
+        200:
+          description:  sucessful.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: the article does not belong to the receiver
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the article has already been marked as handed over
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    delete:
+      description: cancels a handoff
+      security:
+        - internalApiKey: []
+      responses:
+        200:
+          description:  sucessful.
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        422:
+          description: the handoff has completed
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+    put:
+      description:  Used to confirm that a handoff has completed
+      security:
+        - internalApiKey: []
+      responses:
+        200: 
+          description: success
+          schema:
+            properties:
+              correlationID:
+                type: string
+        403:
+          description: The card is not one of the neighbours cards
+          schema:
+            properties:
+              correlationID:
+                type: string
+        404:
+          description: the card does not exist
+          schema:
+            properties:
+              correlationID:
+                type: string
+        409:
+          description: there are more articles to hand over to the receiver
+          schema:
+            properties:
+              correlationID:
+                type: string
+        401:
+          $ref: '#/definitions/401'  
+        
+      
+definitions:
+
+  401:
+    description: Not authorized.  Either the authorization key was missing or not present
+    properties:
+      correlationID:
+        type: string
+      reason:
+        type: string
+        enum: 
+            [ 'Authorization key invalid', 'X-consumer-apiKey header not present']  
+            
+  FindDeliveriesResponse:
+    description: The object returned from findDeliveries
+    
+  Delivery:
+    description: A single delivery withing the trustmile system
+    properties:
+      deliveryId:
+        type: string
+        format: uuid
+      
+
+  
