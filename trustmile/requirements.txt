@@ -16,7 +16,7 @@ boto==2.38.0
 boto3==1.3.0
 botocore==1.4.8
 cairocffi==0.7.2
-CairoSVG==1.0.20
+CairoSVG==2.5.1
 cchardet==1.0.0
 celery==3.1.19
 certifi==2015.9.6.2
