@@ -128,7 +128,7 @@ python-editor==0.3
 python-gflags==2.0
 python-twitter==1.1
 pytz==2015.4
-PyYAML==3.11
+PyYAML==5.4
 pyzmq==14.7.0
 redis==2.10.5
 redlock==1.2.0
