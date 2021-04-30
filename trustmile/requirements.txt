@@ -136,7 +136,7 @@ regex==2016.1.10
 repoze.lru==0.6
 requests==2.6.0
 requests-oauthlib==0.4.0
-rsa==3.1.4
+rsa==4.7
 Shapely==1.5.13
 simplegeneric==0.8.1
 simplejson==3.3.1
