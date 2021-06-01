@@ -150,7 +150,7 @@ tornado==4.2.1
 traitlets==4.0.0
 translationstring==1.3
 uritemplate.py==0.2.0
-urllib3==1.6
+urllib3==1.26.5
 -e git+https://github.com/unbit/uwsgi.git@b608eb1772641d525bfde268fe9d6d8d0d5efde7#egg=uWSGI
 validate-email==1.3
 venusian==1.0
