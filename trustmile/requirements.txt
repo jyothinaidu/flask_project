@@ -2,7 +2,7 @@ aftership==0.1
 alembic==0.8.0
 amqp==1.4.7
 aniso8601==1.0.0
-ansible==2.0.2.0
+ansible==4.2.0
 anyjson==0.3.3
 apiclient==1.0.2
 appnope==0.1.0
