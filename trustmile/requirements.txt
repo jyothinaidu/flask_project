@@ -102,7 +102,7 @@ notebook==4.0.6
 oauth2==1.5.211
 oauth2client==1.1
 oauthlib==0.6.0
-paramiko==1.16.0
+paramiko==2.10.1
 parse-rest==0.2.20141004
 passlib==1.6.1
 PasteDeploy==1.5.2
