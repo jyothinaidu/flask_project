@@ -107,7 +107,7 @@ parse-rest==0.2.20141004
 passlib==1.6.1
 PasteDeploy==1.5.2
 -e git+https://github.com/TrustMile/flask-sqlalchemy.git#egg=FlaskSQLAlchemy
-lxml==3.6.0
+lxml==4.9.1
 path.py==8.1.2
 pbr==1.6.0
 pexpect==4.0.1
