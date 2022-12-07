@@ -19,7 +19,7 @@ cairocffi==0.7.2
 CairoSVG==1.0.20
 cchardet==1.0.0
 celery==3.1.19
-certifi==2015.9.6.2
+certifi==2022.12.7
 cffi==1.5.0
 chardet==1.0.1
 click==6.6
